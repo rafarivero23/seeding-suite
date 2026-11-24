@@ -30,10 +30,9 @@ img{display:block;max-width:100%}
 .brand{display:flex;align-items:baseline;gap:10px;min-width:0}
 .brand b{font-weight:700;letter-spacing:-.02em;font-size:17px;white-space:nowrap}
 a.brand{text-decoration:none;color:inherit;align-items:center}
-.logo-swoosh{height:40px;width:auto;transform:rotate(-8deg)}
+.logo-swoosh{height:44px;width:auto}
 .logo-word{height:32px;width:auto}
 .hero{display:flex;align-items:center;justify-content:center;gap:28px;padding:26px 0 6px}
-.hero-swoosh{height:200px;width:auto;transform:rotate(-8deg);filter:drop-shadow(0 6px 14px rgba(0,0,0,.12))}
 .hero-word{width:min(560px,70vw);height:auto;filter:drop-shadow(0 6px 14px rgba(0,0,0,.10))}
 .brand span{color:var(--mute);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nav{display:flex;gap:2px;margin-left:auto}
@@ -104,6 +103,27 @@ textarea.input{height:auto;padding:10px 12px;min-height:80px}
 .alloc .a .v{font-size:18px;font-weight:600;letter-spacing:-.02em}
 .alloc .a.full{background:var(--black);color:#fff;border-color:var(--black)}
 .alloc .a.full .k{color:#bbb}
+.allow{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:18px}
+.allow.compact{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));margin:0}
+.al{border:1px solid var(--line);border-radius:4px;padding:10px 12px}
+.al.full{background:var(--black);border-color:var(--black);color:#fff}
+.al-top{display:flex;justify-content:space-between;gap:6px;align-items:baseline}
+.al .k{font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--mute)}
+.al .left{font-size:11px;font-weight:600}
+.al.full .k{color:#aaa}
+.al-mid{margin-top:4px}.al-mid b{font-size:24px;font-weight:700;letter-spacing:-.03em}.al-mid span{font-size:12px;color:var(--mute)}
+.al.full .al-mid span{color:#bbb}
+.dots{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}.dots i{width:14px;height:5px;border-radius:3px;background:var(--line)}.dots i.on{background:var(--black)}
+.al.full .dots i{background:#555}.al.full .dots i.on{background:#fff}
+.al-sub{font-size:11px;color:var(--mute);margin-top:6px}.al.full .al-sub{color:#aaa}
+.allow.compact .al-mid b{font-size:18px}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:12px;border:1px solid var(--line2);border-radius:999px;padding:4px 10px;color:var(--ink2);white-space:nowrap}
+.pill b{color:var(--ink)}
+.pill.full{background:var(--black);border-color:var(--black);color:#ddd}.pill.full b{color:#fff}
+.lb-cat{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:14px 8px 6px;border-bottom:1px solid var(--line2);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.lb-cat-r{letter-spacing:0;text-transform:none;font-weight:400;color:var(--ink2);font-size:12px}
+.lb-cat.full .lb-cat-r b{background:var(--black);color:#fff;padding:1px 6px;border-radius:3px}
 .filters{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
 .filters .search{width:220px;margin-left:auto}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:22px 14px;align-items:start}
@@ -212,8 +232,8 @@ html,body{overflow-x:hidden}
   h1{font-size:34px}
   .top-in{padding:0 14px;gap:10px}
   .brand span{display:none}
-  .logo-swoosh{height:30px}.logo-word{display:none}
-  .hero-swoosh{height:110px}.hero{gap:14px}
+  .logo-swoosh{height:32px}.logo-word{height:22px}
+  .hero{gap:14px}
   .brand{flex:1;min-width:0}.brand b{overflow:hidden;text-overflow:ellipsis;font-size:15px}
   .nav{margin-left:0}.sync{display:none}.lang button{padding:5px 7px}
   .nav a{padding:7px 9px;font-size:12px}
@@ -246,7 +266,7 @@ const T = {
   noGuests:"No guests yet. Import the guest list in Admin.", noProducts:"No products yet. Import inventory in Admin.",
   hi:"Hi", buildLook:"Build your lookbook. Tap any product to add it.",
   all:"All", footwear:"Footwear", tops:"Tops", bottoms:"Bottoms", jackets:"Jackets", hoodies:"Hoodies", accessories:"Accessories",
-  search:"Search", allSizes:"All sizes", mySizes:"My sizes", available:"available", soldOut:"Sold out", inLookbook:"In lookbook",
+  search:"Search", allSizes:"All sizes", mySizes:"My sizes", available:"available", soldOut:"Sold out", inLookbook:"In lookbook", takeHome:"to take home", leftToTake:"left to pick", allTaken:"all picked", inLookbookLc:"in lookbook", allowHelp:"Add as many pieces as you like to try on. Your allowance is how many you take home.", lbHelp:"Try on as much as you like — then Keep up to your allowance per category.", limitReached:"Limit reached", limitToast:"{cat}: allowance reached. Return one to keep another.",
   lookbook:"My Lookbook", lookbookEmpty:"Your lookbook is empty. Tap products to add them.",
   addToLookbook:"Add to lookbook", selectSize:"Select size", yourSize:"Your size", allocFull:"You've reached your {cat} allocation",
   added:"Added to your lookbook", removed:"Removed", sendStylists:"Send to stylists", sent:"Sent to the stylists. They're pulling your pieces.",
@@ -284,7 +304,7 @@ const T = {
   noGuests:"Aún no hay invitados. Importa la lista en Admin.", noProducts:"Aún no hay productos. Importa el inventario en Admin.",
   hi:"Hola", buildLook:"Arma tu lookbook. Toca un producto para agregarlo.",
   all:"Todo", footwear:"Calzado", tops:"Tops", bottoms:"Bottoms", jackets:"Chamarras", hoodies:"Sudaderas", accessories:"Accesorios",
-  search:"Buscar", allSizes:"Todas las tallas", mySizes:"Mis tallas", available:"disponibles", soldOut:"Agotado", inLookbook:"En lookbook",
+  search:"Buscar", allSizes:"Todas las tallas", mySizes:"Mis tallas", available:"disponibles", soldOut:"Agotado", inLookbook:"En lookbook", takeHome:"para llevar", leftToTake:"por elegir", allTaken:"completo", inLookbookLc:"en lookbook", allowHelp:"Agrega todas las piezas que quieras probarte. Tu asignación es lo que te llevas a casa.", lbHelp:"Pruébate todo lo que quieras y luego elige Me lo llevo hasta tu asignación por categoría.", limitReached:"Límite alcanzado", limitToast:"{cat}: asignación completa. Devuelve una para llevarte otra.",
   lookbook:"Mi Lookbook", lookbookEmpty:"Tu lookbook está vacío. Toca productos para agregarlos.",
   addToLookbook:"Agregar al lookbook", selectSize:"Elige talla", yourSize:"Tu talla", allocFull:"Llegaste a tu límite de {cat}",
   added:"Agregado a tu lookbook", removed:"Eliminado", sendStylists:"Enviar a stylists", sent:"Enviado. El equipo está preparando tus piezas.",
@@ -462,7 +482,21 @@ function availOf(prod, size, res){ res=res||reservedMap(); return Math.max(0,((p
 function totalAvail(prod, res){ res=res||reservedMap(); return Object.keys(prod.sizes||{}).reduce((a,s)=>a+availOf(prod,s,res),0); }
 function totalStock(prod){ return Object.values(prod.sizes||{}).reduce((a,b)=>a+(+b||0),0); }
 function allocOf(g){ const a={}; CATS.forEach(c=>{ const v = g && g.alloc && g.alloc[c]; a[c] = (v===0||v)? +v : (+S.config.alloc[c]||0); }); return a; }
-function usedOf(gid){ const u={}; CATS.forEach(c=>u[c]=0); picksOf(gid).forEach(p=>{ if(HOLD.includes(p.status)) u[p.cat]=(u[p.cat]||0)+1; }); return u; }
+// Allocation counts only what the guest is taking home (Keep). The lookbook itself is unlimited.
+function usedOf(gid){ const u={}; CATS.forEach(c=>u[c]=0); picksOf(gid).forEach(p=>{ if(p.status==="kept") u[p.cat]=(u[p.cat]||0)+1; }); return u; }
+function lbCountOf(gid){ const u={}; CATS.forEach(c=>u[c]=0); picksOf(gid).forEach(p=>{ if(HOLD.includes(p.status)) u[p.cat]=(u[p.cat]||0)+1; }); return u; }
+function allowanceHTML(g, compact){
+  const a=allocOf(g), u=usedOf(g.id), l=lbCountOf(g.id);
+  const cats=CATS.filter(c=>a[c]>0||u[c]>0||l[c]>0);
+  if(compact) return '<div class="pills">'+cats.map(c=>{ const left=Math.max(0,a[c]-u[c]); return '<span class="pill'+(u[c]>=a[c]?" full":"")+'">'+esc(t(c))+' <b>'+u[c]+'/'+a[c]+'</b>'+(left?' · '+left+' '+esc(t("leftToTake")):' ✓')+'</span>'; }).join("")+'</div>';
+  return '<div class="allow'+(compact?" compact":"")+'">'+cats.map(c=>{
+    const left=Math.max(0,a[c]-u[c]), full=u[c]>=a[c];
+    const dots=Array.from({length:Math.max(a[c],u[c])},(_,i)=>'<i class="'+(i<u[c]?"on":"")+'"></i>').join("");
+    return '<div class="al '+(full?"full":"")+'"><div class="al-top"><span class="k">'+esc(t(c))+'</span><span class="left">'+(full?esc(t("allTaken")):left+' '+esc(t("leftToTake")))+'</span></div>'+
+      '<div class="al-mid"><b>'+u[c]+'</b><span> / '+a[c]+' '+esc(t("takeHome"))+'</span></div><div class="dots">'+dots+'</div>'+
+      (compact?'':'<div class="al-sub">'+l[c]+' '+esc(t("inLookbookLc"))+'</div>')+'</div>';
+  }).join("")+'</div>';
+}
 function guestStage(g){
   const ps = picksOf(g.id);
   if(g.completedAt) return "done";
@@ -495,7 +529,7 @@ document.addEventListener("focusout", ()=>setTimeout(()=>{ if(pendingRender && !
 function topBar(){
   const v=S.view;
   return '<header class="top"><div class="top-in">'+
-    '<a class="brand" href="#guest" aria-label="Seeding Suite"><img class="logo-swoosh" src="assets/swoosh-tape.webp" alt=""><img class="logo-word" src="assets/seeding-suite-wordmark.webp" alt="Seeding Suite"><span>'+esc(S.local?t("localMode"):(S.config.eventName&&S.config.eventName!=="Nike Seeding Suite"?S.config.eventName:""))+'</span></a>'+
+    '<a class="brand" href="#guest" aria-label="Seeding Suite"><img class="logo-word" src="assets/seeding-suite-wordmark.webp" alt="Seeding Suite"><span>'+esc(S.local?t("localMode"):(S.config.eventName&&S.config.eventName!=="Nike Seeding Suite"?S.config.eventName:""))+'</span></a>'+
     '<nav class="nav">'+
       '<a href="#guest" class="'+(v==="guest"?"on":"")+'">'+t("guest")+'</a>'+
       '<a href="#back-of-house" class="'+(v==="boh"?"on":"")+'">'+t("boh")+'</a>'+
@@ -503,6 +537,7 @@ function topBar(){
     '</nav>'+
     '<div class="lang"><button data-act="lang" data-v="en" class="'+(LANG==="en"?"on":"")+'">EN</button><button data-act="lang" data-v="es" class="'+(LANG==="es"?"on":"")+'">ES</button></div>'+
     '<span class="sync '+(S.connected?"ok":"")+'" title="'+(S.connected?"Live":"…")+'"></span>'+
+    '<img class="logo-swoosh" src="assets/swoosh-tape.webp" alt="">'+
   '</div></header>';
 }
 function viewHTML(){
@@ -516,7 +551,7 @@ function viewHTML(){
 }
 
 function loginHTML(){
-  return '<div class="wrap" style="max-width:420px;padding-top:8vh"><div class="hero" style="justify-content:flex-start;margin-bottom:28px"><img class="hero-swoosh" src="assets/swoosh-tape.webp" alt="" style="height:110px"><img class="hero-word" src="assets/seeding-suite-wordmark.webp" alt="Seeding Suite" style="width:260px"></div><div class="eyebrow">'+esc(S.config.eventName||"Nike Seeding Suite")+'</div><h1 style="margin:8px 0 26px">'+esc(t("login"))+'</h1>'+
+  return '<div class="wrap" style="max-width:420px;padding-top:8vh"><div class="hero" style="justify-content:flex-start;margin-bottom:28px"><img class="hero-word" src="assets/seeding-suite-wordmark.webp" alt="Seeding Suite" style="width:260px"></div><div class="eyebrow">'+esc(S.config.eventName||"Nike Seeding Suite")+'</div><h1 style="margin:8px 0 26px">'+esc(t("login"))+'</h1>'+
    '<form id="login-form" style="display:grid;gap:12px"><label class="fl">'+esc(t("email"))+'<input class="input" id="li-email" type="email" autocomplete="username" required></label>'+
    '<label class="fl">'+esc(t("password"))+'<input class="input" id="li-pass" type="password" autocomplete="current-password" required></label>'+
    '<p class="small" id="li-err" style="min-height:18px"></p><button class="btn block" type="submit">'+esc(t("signIn"))+'</button></form></div>';
@@ -547,7 +582,7 @@ function guestHTML(){
   let h = '<div class="shop"><main class="shop-main">';
   h += '<div class="hello"><div><div class="eyebrow">'+esc(t("welcome"))+'</div><h1 style="margin-top:6px">'+esc(t("hi"))+', '+esc(first)+'.</h1><p class="muted" style="margin-top:8px">'+esc(t("buildLook"))+'</p></div>'+
        '<button class="btn ghost sm" data-act="switchGuest">'+esc(t("switchGuest"))+'</button></div>';
-  h += '<div class="alloc">'+cats.map(c=>{ const full=used[c]>=alloc[c]; return '<div class="a '+(full?"full":"")+'"><div class="k">'+esc(t(c))+'</div><div class="v">'+used[c]+' <span style="opacity:.5;font-weight:400">/ '+alloc[c]+'</span></div></div>'; }).join("")+'</div>';
+  h += '<p class="small muted" style="margin:-6px 0 10px">'+esc(t("allowHelp"))+'</p>'+allowanceHTML(g);
   h += '<div class="filters"><button class="chip '+(S.cat==="all"?"on":"")+'" data-act="cat" data-v="all">'+esc(t("all"))+'</button>'+
        cats.map(c=>'<button class="chip '+(S.cat===c?"on":"")+'" data-act="cat" data-v="'+c+'">'+esc(t(c))+'</button>').join("")+
        '<select class="input sm sizesel" data-change="sizeF" data-live="1">'+
@@ -574,7 +609,7 @@ function guestHTML(){
 }
 function pickerHTML(){
   const gs = sortedGuests().filter(g=>!S.gq || norm(g.name+" "+(g.role||"")).includes(norm(S.gq)));
-  let h = '<div class="wrap"><div class="hero"><img class="hero-swoosh" src="assets/swoosh-tape.webp" alt=""><img class="hero-word" src="assets/seeding-suite-wordmark.webp" alt="Seeding Suite"></div><div class="picker-head"><div><div class="eyebrow">'+esc(S.config.eventName||"")+'</div><h1 style="margin-top:8px">'+esc(t("welcome"))+'.</h1><p class="muted" style="margin-top:10px;font-size:17px">'+esc(t("selectName"))+'</p></div>'+
+  let h = '<div class="wrap"><div class="hero"><img class="hero-word" src="assets/seeding-suite-wordmark.webp" alt="Seeding Suite"></div><div class="picker-head"><div><div class="eyebrow">'+esc(S.config.eventName||"")+'</div><h1 style="margin-top:8px">'+esc(t("welcome"))+'.</h1><p class="muted" style="margin-top:10px;font-size:17px">'+esc(t("selectName"))+'</p></div>'+
     '<input id="q-gname" data-live="1" class="input" style="max-width:300px" placeholder="'+esc(t("searchName"))+'" value="'+esc(S.gq)+'"></div>';
   if(!Object.keys(S.guests).length) return h+'<div class="empty">'+esc(t("noGuests"))+'</div></div>';
   h += '<div class="guest-grid">'+gs.map(g=>{
@@ -587,24 +622,36 @@ function statusBadge(st){
   const cls = {draft:"faint",requested:"",pulled:"solid",kept:"solid",returned:"grey",unavailable:"grey"}[st]||"";
   return '<span class="badge '+cls+'">'+esc(t("st_"+st))+'</span>';
 }
+function keepBtns(pk){
+  const ok = canKeep(pk);
+  return (ok ? '<button class="btn xs" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="kept">'+esc(t("keep"))+'</button>'
+             : '<button class="btn xs" disabled title="'+esc(t("limitToast",{cat:t(pk.cat)}))+'">'+esc(t("limitReached"))+'</button>')+
+         '<button class="btn ghost xs" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="returned">'+esc(t("ret"))+'</button>';
+}
 function lookbookHTML(g, ps){
-  const visible = ps.filter(p=>p.status!=="returned" || true);
   const drafts = ps.filter(p=>p.status==="draft").length;
   const pending = ps.filter(p=>p.status==="requested"||p.status==="pulled").length;
   const pulled = ps.filter(p=>p.status==="pulled").length;
+  const alloc = allocOf(g), used = usedOf(g.id);
   let h = '<div class="lb-head"><div class="row"><h2>'+esc(t("lookbook"))+'</h2><span class="spacer"></span>'+(g.rack?'<span class="badge solid">'+esc(t("rack"))+' '+esc(g.rack)+'</span>':'')+
           '<button class="btn ghost xs lb-close" data-act="toggleLb" style="margin-left:6px">✕</button></div>'+
-          (pulled?'<p class="small muted" style="margin-top:6px">'+esc(t("pendingDecision"))+'</p>':'')+'</div>';
+          '<p class="small muted" style="margin-top:6px">'+esc(pulled?t("pendingDecision"):t("lbHelp"))+'</p></div>';
   h += '<div class="lb-list" data-scroll="lb">';
-  if(!visible.length) h += '<div class="empty small">'+esc(t("lookbookEmpty"))+'</div>';
-  const order = {pulled:0,draft:1,requested:2,kept:3,unavailable:4,returned:5};
-  visible.slice().sort((a,b)=>(order[a.status]-order[b.status])||((a.createdAt||0)-(b.createdAt||0))).forEach(pk=>{
-    const p = S.products[pk.sku] || {sku:pk.sku,name:t("unknownProduct"),category:pk.cat};
-    let acts = statusBadge(pk.status);
-    if(pk.status==="draft"||pk.status==="unavailable") acts += '<button class="link" data-act="removePick" data-id="'+esc(pk.id)+'">'+esc(t("remove"))+'</button>';
-    if(pk.status==="pulled") acts = '<button class="btn xs" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="kept">'+esc(t("keep"))+'</button><button class="btn ghost xs" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="returned">'+esc(t("ret"))+'</button>';
-    if((pk.status==="kept"||pk.status==="returned") && !g.completedAt) acts += '<button class="link" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="pulled">'+esc(t("undo"))+'</button>';
-    h += '<div class="lbi" style="'+(pk.status==="returned"?"opacity:.45":"")+'">'+imgHTML(p)+'<div><div class="nm">'+esc(p.name)+'</div><div class="sub">'+esc(p.color||"")+' · '+esc(t("size"))+' '+esc(pk.size)+'</div><div class="acts">'+acts+'</div></div></div>';
+  if(!ps.length) h += '<div class="empty small">'+esc(t("lookbookEmpty"))+'</div>';
+  const order = {pulled:0,kept:1,draft:2,requested:3,unavailable:4,returned:5};
+  CATS.forEach(c=>{
+    const items = ps.filter(p=>p.cat===c).sort((a,b)=>(order[a.status]-order[b.status])||((a.createdAt||0)-(b.createdAt||0)));
+    if(!items.length) return;
+    const left = Math.max(0,alloc[c]-used[c]);
+    h += '<div class="lb-cat'+(used[c]>=alloc[c]?" full":"")+'"><span>'+esc(t(c))+'</span><span class="lb-cat-r"><b>'+used[c]+' / '+alloc[c]+'</b> '+esc(t("takeHome"))+' · '+(left?left+' '+esc(t("leftToTake")):esc(t("allTaken")))+'</span></div>';
+    items.forEach(pk=>{
+      const p = S.products[pk.sku] || {sku:pk.sku,name:t("unknownProduct"),category:pk.cat};
+      let acts = statusBadge(pk.status);
+      if(pk.status==="draft"||pk.status==="unavailable") acts += '<button class="link" data-act="removePick" data-id="'+esc(pk.id)+'">'+esc(t("remove"))+'</button>';
+      if(pk.status==="pulled") acts = keepBtns(pk);
+      if((pk.status==="kept"||pk.status==="returned") && !g.completedAt) acts += '<button class="link" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="pulled">'+esc(t("undo"))+'</button>';
+      h += '<div class="lbi" style="'+(pk.status==="returned"?"opacity:.45":"")+'">'+imgHTML(p)+'<div><div class="nm">'+esc(p.name)+'</div><div class="sub">'+esc(p.color||"")+' · '+esc(t("size"))+' '+esc(pk.size)+'</div><div class="acts">'+acts+'</div></div></div>';
+    });
   });
   h += '</div><div class="lb-foot">';
   h += '<button class="btn block" data-act="submitLb" '+(drafts?"":"disabled")+'>'+esc(t("sendStylists"))+(drafts?' ('+drafts+')':'')+'</button>';
@@ -617,7 +664,7 @@ function productModalHTML(id){
   const g = S.guests[S.activeGuest];
   const res = reservedMap();
   const alloc = allocOf(g), used = usedOf(g.id);
-  const full = used[p.category] >= alloc[p.category];
+  const full = false;
   const rec = sizeForCat(g, p.category);
   const sizes = Object.keys(p.sizes||{}).sort(sizeSort);
   const sel = S.modal.size;
@@ -679,9 +726,9 @@ function bohHTML(){
     if(!fittingGuests.length) h += '<div class="empty">'+esc(t("nobodyFitting"))+'</div>';
     h += '<div class="queue">'+fittingGuests.map(g=>{
       const items = picksOf(g.id).filter(p=>["pulled","kept","returned","requested"].includes(p.status));
-      return '<div class="qcard">'+bohGuestHead(g,'')+items.map(pk=>{
+      return '<div class="qcard">'+bohGuestHead(g,'')+'<div style="padding:12px 16px;border-bottom:1px solid var(--line)">'+allowanceHTML(g,true)+'</div>'+items.map(pk=>{
         let a;
-        if(pk.status==="pulled") a = '<button class="btn xs" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="kept">'+esc(t("keep"))+'</button><button class="btn ghost xs" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="returned">'+esc(t("ret"))+'</button><button class="link" data-act="swapSize" data-id="'+esc(pk.id)+'">'+esc(t("changeSize"))+'</button>';
+        if(pk.status==="pulled") a = keepBtns(pk)+'<button class="link" data-act="swapSize" data-id="'+esc(pk.id)+'">'+esc(t("changeSize"))+'</button>';
         else if(pk.status==="requested") a = statusBadge("requested");
         else a = statusBadge(pk.status)+' <button class="link" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="pulled">'+esc(t("undo"))+'</button>';
         return bohItem(pk, a, pk.status==="returned");
@@ -831,8 +878,10 @@ function routeFromHash(){
 }
 window.addEventListener("hashchange", routeFromHash);
 
+function canKeep(pk){ const g=S.guests[pk.guestId]; if(!g) return true; return usedOf(g.id)[pk.cat] < allocOf(g)[pk.cat]; }
 async function setPick(id, status){
   const pk = S.picks[id]; if(!pk) return;
+  if(status==="kept" && pk.status!=="kept" && !canKeep(pk)){ toast(t("limitToast",{cat:t(pk.cat)})); return; }
   const patch = {status, updatedAt:now()};
   if(status==="pulled") patch.pulledAt=now();
   if(status==="requested" && !pk.requestedAt) patch.requestedAt=now();
@@ -842,7 +891,7 @@ async function setPick(id, status){
 async function addPick(){
   const m=S.modal; const p=S.products[m.id]; const g=S.guests[S.activeGuest]; if(!p||!g||!m.size) return;
   const res=reservedMap(); if(availOf(p,m.size,res)<=0){ toast(t("soldOut")); return; }
-  const alloc=allocOf(g), used=usedOf(g.id); if(used[p.category]>=alloc[p.category]){ toast(t("allocFull",{cat:t(p.category).toLowerCase()})); return; }
+
   const id = rid();
   const doc = {guestId:g.id, sku:p.id, size:m.size, cat:p.category, status:"draft", createdAt:now(), updatedAt:now()};
   S.picks[id] = {id, ...doc}; // optimistic
@@ -867,7 +916,7 @@ const handlers = {
   submitLb: async ()=>{ const g=S.guests[S.activeGuest]; const ds=picksOf(g.id).filter(p=>p.status==="draft"); const ts=now();
     for(const p of ds){ await w(()=>kDoc(p.id).update({status:"requested",requestedAt:ts,updatedAt:ts}),"pick"); }
     toast(t("sent")); },
-  finishGuest: ()=>ask(t("finishQ"), async ()=>{ const g=S.guests[S.activeGuest]; await w(()=>gDoc(g.id).update({completedAt:now()}),"guest"); toast(t("finished")); handlers.switchGuest(); }),
+  finishGuest: ()=>ask(t("finishQ")+"  "+(()=>{ const g=S.guests[S.activeGuest]; const a=allocOf(g),u=usedOf(g.id); return CATS.filter(c=>a[c]>0||u[c]>0).map(c=>t(c)+" "+u[c]+"/"+a[c]).join(" · "); })(), async ()=>{ const g=S.guests[S.activeGuest]; await w(()=>gDoc(g.id).update({completedAt:now()}),"guest"); toast(t("finished")); handlers.switchGuest(); }),
   finishGuestStaff: el=>w(()=>gDoc(el.dataset.id).update({completedAt:now()}),"guest"),
   reopenGuest: el=>w(()=>gDoc(el.dataset.id).update({completedAt:null}),"guest"),
   bohTab: el=>{ S.bohTab=el.dataset.v; render(); },
