@@ -33,7 +33,16 @@ a.brand{text-decoration:none;color:inherit;align-items:center}
 .logo-swoosh{height:44px;width:auto}
 .logo-word{height:32px;width:auto}
 .hero{display:flex;align-items:center;justify-content:center;gap:28px;padding:26px 0 6px}
-.hero-word{width:min(560px,70vw);height:auto;filter:drop-shadow(0 6px 14px rgba(0,0,0,.10))}
+.hero-word{width:min(560px,70vw);height:auto;filter:drop-shadow(0 6px 14px rgba(0,0,0,.10));cursor:pointer}
+.hero-word.hero-sm{width:260px}
+.tape-logo{position:relative;display:block}
+.tape-logo .tl{position:absolute}
+.tape-logo img{position:absolute;inset:0;width:100%;height:100%;display:block}
+.tape-logo .ts{-webkit-clip-path:var(--a);clip-path:var(--a);animation:tapeIn 240ms cubic-bezier(.3,.7,.2,1) both}
+.tape-logo .tf{opacity:0;animation:tapeFill 220ms ease-out both}
+@keyframes tapeIn{from{-webkit-clip-path:var(--a);clip-path:var(--a)}to{-webkit-clip-path:var(--b);clip-path:var(--b)}}
+@keyframes tapeFill{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.tape-logo .ts,.tape-logo .tf{animation-duration:1ms}}
 .brand span{color:var(--mute);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nav{display:flex;gap:2px;margin-left:auto}
 .nav a{padding:8px 14px;font-size:13px;font-weight:500;color:var(--ink2);text-decoration:none;border-radius:999px;letter-spacing:.01em}
@@ -551,11 +560,35 @@ function viewHTML(){
 }
 
 function loginHTML(){
-  return '<div class="wrap" style="max-width:420px;padding-top:8vh"><div class="hero" style="justify-content:flex-start;margin-bottom:28px"><img class="hero-word" src="assets/seeding-suite-wordmark.webp" alt="Seeding Suite" style="width:260px"></div><div class="eyebrow">'+esc(S.config.eventName||"Nike Seeding Suite")+'</div><h1 style="margin:8px 0 26px">'+esc(t("login"))+'</h1>'+
+  return '<div class="wrap" style="max-width:420px;padding-top:8vh"><div class="hero" style="justify-content:flex-start;margin-bottom:28px">'+tapeLogoHTML(tapeElapsed(),"hero-word hero-sm")+'</div><div class="eyebrow">'+esc(S.config.eventName||"Nike Seeding Suite")+'</div><h1 style="margin:8px 0 26px">'+esc(t("login"))+'</h1>'+
    '<form id="login-form" style="display:grid;gap:12px"><label class="fl">'+esc(t("email"))+'<input class="input" id="li-email" type="email" autocomplete="username" required></label>'+
    '<label class="fl">'+esc(t("password"))+'<input class="input" id="li-pass" type="password" autocomplete="current-password" required></label>'+
    '<p class="small" id="li-err" style="min-height:18px"></p><button class="btn block" type="submit">'+esc(t("signIn"))+'</button></form></div>';
 }
+const TAPE = {"ar":[2650,998],"boxes":[[0.226,2.405,13.585,54.609],[14.075,2.806,14.377,50.0],[28.377,1.102,15.057,51.503],[44.264,3.106,14.679,51.904],[56.755,1.403,10.906,51.603],[68.642,0.902,16.377,51.804],[84.226,1.703,15.547,52.004],[12.226,51.303,14.264,47.295],[27.811,54.609,14.113,43.788],[43.396,55.711,9.849,42.585],[54.377,55.01,14.792,42.986],[69.472,55.11,15.472,43.788]],"strips":[[[[50,-2],[84,20],[10,60],[-4,26]],[[-4,32],[4,60],[104,84],[104,50]],[[104,56],[104,90],[8,104],[-2,74]]],[[[0,30],[0,-3],[88,-3],[88,30]],[[-3,10],[38,10],[38,104],[-3,104]],[[24,66],[24,32],[98,32],[98,66]],[[0,104],[0,68],[104,68],[104,104]]],[[[0,32],[0,-3],[90,-3],[90,32]],[[-3,10],[40,10],[40,104],[-3,104]],[[24,66],[24,30],[92,30],[92,66]],[[0,104],[0,66],[104,66],[104,104]]],[[[-3,-3],[38,-3],[38,104],[-3,104]],[[0,26],[0,-3],[104,40],[104,72]],[[104,36],[104,74],[14,104],[-3,74]]],[[[0,24],[0,-3],[104,-3],[104,24]],[[12,12],[76,12],[76,88],[12,88]],[[0,104],[0,70],[104,70],[104,104]]],[[[-3,104],[30,104],[40,-3],[2,-3]],[[2,-3],[34,-3],[82,104],[46,104]],[[50,104],[88,104],[104,-3],[66,-3]]],[[[56,-3],[84,10],[12,82],[-4,60]],[[54,24],[54,-3],[104,12],[98,34]],[[-4,58],[2,92],[58,104],[64,76]],[[44,104],[56,74],[104,58],[104,90]],[[36,74],[36,44],[104,44],[104,74]]],[[[52,-3],[86,14],[10,62],[-4,24]],[[-4,28],[4,58],[104,82],[104,44]],[[104,50],[104,88],[2,104],[-3,70]]],[[[-3,-3],[40,-3],[40,92],[-3,92]],[[56,-3],[104,-3],[104,92],[56,92]],[[-3,104],[-3,58],[104,58],[104,104]]],[[[0,28],[0,-3],[104,-3],[104,28]],[[10,16],[80,16],[80,86],[10,86]],[[0,104],[0,66],[104,66],[104,104]]],[[[0,30],[0,-3],[104,-3],[104,30]],[[20,14],[70,14],[70,104],[20,104]]],[[[0,28],[0,-3],[90,-3],[90,28]],[[-3,8],[40,8],[40,104],[-3,104]],[[28,64],[28,30],[84,30],[84,64]],[[0,104],[0,62],[104,62],[104,104]]]]};
+
+const TAPE_DUR=240, TAPE_GAP=75;
+// Builds the duct-tape wordmark, each strip of tape "laid down" in sequence. elapsed (ms) keeps the
+// animation continuous across re-renders; after it finishes, the static wordmark is shown.
+function tapeLogoHTML(elapsed, cls){
+  let t=200; const pt=p=>p[0]+"% "+p[1]+"%";
+  const parts=[];
+  TAPE.boxes.forEach((bx,k)=>{
+    let inner="";
+    TAPE.strips[k].forEach(q=>{
+      const a="polygon("+[q[0],q[1],q[1],q[0]].map(pt).join(",")+")", b="polygon("+q.map(pt).join(",")+")";
+      inner+='<img class="ts" src="assets/tape/L'+k+'.webp" alt="" style="--a:'+a+';--b:'+b+';animation-delay:'+(t-elapsed)+'ms">';
+      t+=TAPE_GAP;
+    });
+    const fillAt=t-TAPE_GAP+TAPE_DUR; t+=30;
+    inner+='<img class="tf" src="assets/tape/L'+k+'.webp" alt="" style="animation-delay:'+(fillAt-elapsed)+'ms">';
+    parts.push('<div class="tl" style="left:'+bx[0]+'%;top:'+bx[1]+'%;width:'+bx[2]+'%;height:'+bx[3]+'%">'+inner+'</div>');
+  });
+  const total=t+TAPE_DUR+400;
+  if(elapsed>total) return '<img class="'+cls+'" src="assets/seeding-suite-wordmark.webp" alt="Seeding Suite" data-act="replayLogo">';
+  return '<div class="tape-logo '+cls+'" style="aspect-ratio:'+TAPE.ar[0]+'/'+TAPE.ar[1]+'" role="img" aria-label="Seeding Suite" data-act="replayLogo">'+parts.join("")+'</div>';
+}
+function tapeElapsed(){ if(!S.logoStart) S.logoStart=now(); return now()-S.logoStart; }
 /* ============ GUEST VIEW ============ */
 function guestHTML(){
   const g = S.activeGuest && S.guests[S.activeGuest];
@@ -609,7 +642,7 @@ function guestHTML(){
 }
 function pickerHTML(){
   const gs = sortedGuests().filter(g=>!S.gq || norm(g.name+" "+(g.role||"")).includes(norm(S.gq)));
-  let h = '<div class="wrap"><div class="hero"><img class="hero-word" src="assets/seeding-suite-wordmark.webp" alt="Seeding Suite"></div><div class="picker-head"><div><div class="eyebrow">'+esc(S.config.eventName||"")+'</div><h1 style="margin-top:8px">'+esc(t("welcome"))+'.</h1><p class="muted" style="margin-top:10px;font-size:17px">'+esc(t("selectName"))+'</p></div>'+
+  let h = '<div class="wrap"><div class="hero">'+tapeLogoHTML(tapeElapsed(),"hero-word")+'</div><div class="picker-head"><div><div class="eyebrow">'+esc(S.config.eventName||"")+'</div><h1 style="margin-top:8px">'+esc(t("welcome"))+'.</h1><p class="muted" style="margin-top:10px;font-size:17px">'+esc(t("selectName"))+'</p></div>'+
     '<input id="q-gname" data-live="1" class="input" style="max-width:300px" placeholder="'+esc(t("searchName"))+'" value="'+esc(S.gq)+'"></div>';
   if(!Object.keys(S.guests).length) return h+'<div class="empty">'+esc(t("noGuests"))+'</div></div>';
   h += '<div class="guest-grid">'+gs.map(g=>{
@@ -903,7 +936,7 @@ const handlers = {
   lang: el=>{ LANG=el.dataset.v; try{localStorage.setItem("ss_lang",LANG);}catch(e){} document.documentElement.lang=LANG; render(); },
   cat: el=>{ S.cat=el.dataset.v; render(); },
   pickGuest: el=>{ S.activeGuest=el.dataset.id; try{localStorage.setItem("ss_active",S.activeGuest);}catch(e){} S.cat="all"; S.q=""; S.sizeF="mine"; window.scrollTo(0,0); render(); },
-  switchGuest: ()=>{ S.activeGuest=null; S.gq=""; S.lbOpen=false; try{localStorage.removeItem("ss_active");}catch(e){} render(); },
+  switchGuest: ()=>{ S.logoStart=null; S.activeGuest=null; S.gq=""; S.lbOpen=false; try{localStorage.removeItem("ss_active");}catch(e){} render(); },
   toggleLb: ()=>{ S.lbOpen=!S.lbOpen; render(); },
   openProduct: el=>{ const p=S.products[el.dataset.id]; const g=S.guests[S.activeGuest]; const rec=sizeForCat(g,p.category); const res=reservedMap();
     let size = Object.keys(p.sizes||{}).find(s=>rec && sizeMatch(rec,s) && availOf(p,s,res)>0) || null;
@@ -951,6 +984,7 @@ const handlers = {
     S.busy={label:t("clearAll"),done:0,total:all.length}; render(); for(const r of all){ await w(()=>r.delete()); S.busy.done++; render(); } S.busy=null; render(); }),
   import: el=>doImport(el.dataset.v),
   fetchNike: ()=>fetchNikeImages(),
+  replayLogo: ()=>{ S.logoStart=now(); render(); },
   signOut: async ()=>{ try{ await S.sb.auth.signOut(); }catch(e){} location.reload(); },
   tplInv: ()=>downloadTemplate("inv"),
   tplGuest: ()=>downloadTemplate("guest"),
