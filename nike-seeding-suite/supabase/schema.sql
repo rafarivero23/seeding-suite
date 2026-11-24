@@ -12,6 +12,7 @@ declare t text;
 begin
   foreach t in array array['products','guests','picks','config'] loop
     execute format('alter table public.%I enable row level security', t);
+    execute format('grant select, insert, update, delete on public.%I to authenticated', t);
     execute format('drop policy if exists "staff full access" on public.%I', t);
     execute format('create policy "staff full access" on public.%I for all to authenticated using (true) with check (true)', t);
     execute format('alter table public.%I replica identity full', t);

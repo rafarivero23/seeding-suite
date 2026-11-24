@@ -11,7 +11,7 @@ async function get(url, accept) {
   return fetch(url, {
     headers: { "User-Agent": UA, Accept: accept || "*/*", "Accept-Language": "en-US,en;q=0.9" },
     redirect: "follow",
-    signal: AbortSignal.timeout(9000),
+    signal: AbortSignal.timeout(6000),
   });
 }
 
@@ -47,13 +47,15 @@ async function tryPage(url, styleColor) {
     const r = await get(url, "text/html");
     if (!r.ok) return null;
     const html = await r.text();
-    for (const img of imagesFromHtml(html, styleColor).slice(0, 4)) {
+    for (const img of imagesFromHtml(html, styleColor).slice(0, 3)) {
       const hit = await tryImage(img);
       if (hit) return hit;
     }
   } catch {}
   return null;
 }
+
+export const config = { maxDuration: 60 };
 
 export default async function handler(req, res) {
   const raw = String(req.query.sku || "").trim().toUpperCase();
