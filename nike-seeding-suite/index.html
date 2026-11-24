@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nike Seeding Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --black:#111;--ink:#111;--ink2:#4a4a4a;--mute:#8a8a8a;--line:#e3e3e3;--line2:#cfcfcf;
+  --bg:#fff;--tile:#f5f5f5;--tile2:#ededed;--soft:#fafafa;
+  --font:"Helvetica Neue Display","Helvetica Neue","HelveticaNeue",Helvetica,"Inter Tight",Arial,sans-serif;
+  --r:2px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.4}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+img{display:block;max-width:100%}
+.hidden{display:none!important}
+
+/* Top bar */
+.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top-in{display:flex;align-items:center;gap:20px;height:60px;padding:0 24px}
+.brand{display:flex;align-items:baseline;gap:10px;min-width:0}
+.brand b{font-weight:700;letter-spacing:-.02em;font-size:17px;white-space:nowrap}
+.brand span{color:var(--mute);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav{display:flex;gap:2px;margin-left:auto}
+.nav a{padding:8px 14px;font-size:13px;font-weight:500;color:var(--ink2);text-decoration:none;border-radius:999px;letter-spacing:.01em}
+.nav a.on{background:var(--black);color:#fff}
+.lang{display:flex;border:1px solid var(--line2);border-radius:999px;overflow:hidden}
+.lang button{padding:6px 10px;font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--mute)}
+.lang button.on{background:var(--black);color:#fff}
+.sync{width:8px;height:8px;border-radius:50%;background:var(--line2)}
+.sync.ok{background:var(--black)}
+
+/* General */
+.wrap{padding:28px 24px 80px;max-width:1500px;margin:0 auto}
+h1{font-size:44px;font-weight:700;letter-spacing:-.035em;line-height:1}
+h2{font-size:26px;font-weight:700;letter-spacing:-.025em;line-height:1.1}
+h3{font-size:17px;font-weight:600;letter-spacing:-.01em}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.muted{color:var(--mute)}
+.small{font-size:13px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 22px;border-radius:999px;background:var(--black);color:#fff;font-weight:500;font-size:14px;white-space:nowrap;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn:disabled{background:var(--line2);color:#fff;cursor:not-allowed;opacity:1}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line2)}
+.btn.ghost:hover{border-color:var(--black);opacity:1}
+.btn.sm{height:34px;padding:0 14px;font-size:13px}
+.btn.xs{height:28px;padding:0 11px;font-size:12px}
+.btn.block{width:100%}
+.link{text-decoration:underline;text-underline-offset:3px;color:var(--ink2);font-size:13px}
+.input,select.input,textarea.input{height:42px;border:1px solid var(--line2);border-radius:var(--r);padding:0 12px;background:#fff;width:100%;outline:none}
+textarea.input{height:auto;padding:10px 12px;min-height:80px}
+.input:focus{border-color:var(--black)}
+.input.sm{height:32px;padding:0 8px;font-size:13px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 13px;border-radius:999px;border:1px solid var(--line2);font-size:13px;font-weight:500;white-space:nowrap;color:var(--ink2)}
+.chip.on{background:var(--black);border-color:var(--black);color:#fff}
+.badge{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--line2);color:var(--ink2);white-space:nowrap}
+.badge.solid{background:var(--black);color:#fff;border-color:var(--black)}
+.badge.grey{background:var(--tile2);border-color:var(--tile2)}
+.badge.faint{color:var(--mute);border-style:dashed}
+.empty{padding:60px 20px;text-align:center;color:var(--mute)}
+.card{border:1px solid var(--line);border-radius:4px;background:#fff}
+.row{display:flex;align-items:center;gap:10px}
+.spacer{flex:1}
+.sep{height:1px;background:var(--line);margin:18px 0}
+
+/* Product image tile */
+.ph{position:relative;background:var(--tile);aspect-ratio:1/1;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.ph img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+.ph .glyph{width:38%;opacity:.28}
+.ph .glyph svg{width:100%;height:auto}
+.ph .skutag{position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:10px;letter-spacing:.08em;color:var(--mute)}
+
+/* Guest picker */
+.picker-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin:24px 0 28px;flex-wrap:wrap}
+.guest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.gtile{text-align:left;padding:20px;border:1px solid var(--line);border-radius:4px;min-height:110px;display:flex;flex-direction:column;justify-content:space-between;transition:border-color .15s}
+.gtile:hover{border-color:var(--black)}
+.gtile .n{font-size:20px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.gtile.done{opacity:.45}
+
+/* Shop layout */
+.shop{display:grid;grid-template-columns:minmax(0,1fr) 360px;min-height:calc(100vh - 61px)}
+.shop-main{padding:22px 24px 120px;min-width:0}
+.shop-side{border-left:1px solid var(--line);background:var(--soft);position:sticky;top:61px;height:calc(100vh - 61px);display:flex;flex-direction:column}
+.hello{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.alloc{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.alloc .a{border:1px solid var(--line);border-radius:4px;padding:8px 12px;min-width:96px}
+.alloc .a .k{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.alloc .a .v{font-size:18px;font-weight:600;letter-spacing:-.02em}
+.alloc .a.full{background:var(--black);color:#fff;border-color:var(--black)}
+.alloc .a.full .k{color:#bbb}
+.filters{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+.filters .search{width:220px;margin-left:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:22px 14px;align-items:start}
+.fl .input,.fl select,.fl textarea{font-size:15px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:400}
+html,body{overflow-x:hidden}
+.lb-close{display:none}
+.pcard{text-align:left;display:block;width:100%}
+.pcard .meta{padding:10px 2px 0}
+.pcard .nm{font-size:14px;font-weight:500;line-height:1.25}
+.pcard .cl{font-size:13px;color:var(--mute);margin-top:2px}
+.pcard .av{font-size:12px;margin-top:6px;color:var(--ink2)}
+.pcard.out{opacity:.4}
+.pcard .inlb{position:absolute;top:8px;right:8px}
+.pcard:hover .ph{background:var(--tile2)}
+
+/* Lookbook */
+.lb-head{padding:20px 20px 12px;border-bottom:1px solid var(--line)}
+.lb-list{flex:1;overflow:auto;padding:8px 12px}
+.lb-foot{padding:14px 20px 20px;border-top:1px solid var(--line);display:grid;gap:8px;background:#fff}
+.lbi{display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;padding:10px 8px;border-bottom:1px solid var(--line)}
+.lbi:last-child{border-bottom:0}
+.lbi .ph{width:64px}
+.lbi .nm{font-size:13px;font-weight:500;line-height:1.25}
+.lbi .sub{font-size:12px;color:var(--mute)}
+.lbi .acts{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;align-items:center}
+.lb-toggle{display:none}
+
+/* Sheet / modal */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:6px;width:min(920px,100%);max-height:calc(100vh - 40px);overflow:auto;position:relative}
+.modal.narrow{width:min(440px,100%)}
+.modal .x{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:#fff;font-size:20px;line-height:1;z-index:2}
+.modal .x:hover{background:var(--tile)}
+.pd{display:grid;grid-template-columns:1.1fr 1fr}
+.pd .info{padding:36px 32px;display:flex;flex-direction:column;gap:16px}
+.sizes{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}
+.size{height:46px;border:1px solid var(--line2);border-radius:var(--r);font-size:14px;font-weight:500;position:relative}
+.size small{display:block;font-size:10px;color:var(--mute);font-weight:400;line-height:1}
+.size.on{border-color:var(--black);background:var(--black);color:#fff}
+.size.on small{color:#bbb}
+.size.rec{border-color:var(--black)}
+.size:disabled{color:var(--line2);background:var(--soft);cursor:not-allowed;text-decoration:line-through}
+.mbody{padding:28px}
+
+/* Toast */
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--black);color:#fff;padding:12px 20px;border-radius:999px;font-size:14px;z-index:80;box-shadow:0 6px 30px rgba(0,0,0,.18);max-width:90vw}
+
+/* BOH */
+.tabs{display:flex;gap:6px;margin:18px 0 22px;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:20px}
+.stat{border:1px solid var(--line);border-radius:4px;padding:14px 16px}
+.stat .v{font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.stat .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.queue{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px}
+.qcard{border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.qhead{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start;background:var(--soft)}
+.qhead .n{font-size:18px;font-weight:600;letter-spacing:-.02em}
+.rack{width:84px}
+.qitem{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line)}
+.qitem:last-child{border-bottom:0}
+.qitem .ph{width:56px}
+.qitem .nm{font-size:14px;font-weight:500;line-height:1.2}
+.qitem .sub{font-size:12px;color:var(--mute)}
+.qitem .sz{font-size:13px;font-weight:700;border:1px solid var(--black);border-radius:3px;padding:1px 7px;margin-left:4px}
+.qitem.done{opacity:.4}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);font-weight:600;padding:8px 8px;border-bottom:1px solid var(--line2);white-space:nowrap}
+.tbl td{padding:8px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl .ph{width:48px}
+.tbl tr.cathead td{background:var(--soft);font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+
+/* Admin */
+.adm{display:grid;gap:18px}
+.sec{border:1px solid var(--line);border-radius:4px;padding:22px}
+.sec-h{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.form-grid label,.fl{display:grid;gap:5px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.drop{border:1.5px dashed var(--line2);border-radius:4px;padding:26px;text-align:center;color:var(--mute);transition:all .15s}
+.drop.over{border-color:var(--black);background:var(--soft);color:var(--ink)}
+.drop b{color:var(--ink);font-weight:600}
+.allocin{width:52px;text-align:center}
+.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--black)}
+.notice{background:var(--soft);border:1px solid var(--line);padding:14px 16px;border-radius:4px;font-size:13px;color:var(--ink2)}
+.tblwrap{overflow:auto;max-height:620px;border:1px solid var(--line);border-radius:4px}
+.tblwrap .tbl th{position:sticky;top:0;background:#fff;z-index:1}
+
+@media (max-width:1050px){
+  .shop{grid-template-columns:1fr}
+  .shop-side{position:fixed;right:0;top:61px;width:min(400px,100%);z-index:40;transform:translateX(105%);transition:transform .25s}
+  .shop-side.open{transform:none;box-shadow:-10px 0 40px rgba(0,0,0,.12)}
+  .lb-close{display:inline-flex}
+  .lb-toggle{display:flex;position:fixed;bottom:20px;right:20px;z-index:41}
+  .queue{grid-template-columns:1fr}
+  .two{grid-template-columns:1fr}
+}
+@media (max-width:700px){
+  h1{font-size:34px}
+  .top-in{padding:0 14px;gap:10px}
+  .brand span{display:none}
+  .brand{flex:1;min-width:0}.brand b{overflow:hidden;text-overflow:ellipsis;font-size:15px}
+  .nav{margin-left:0}.sync{display:none}.lang button{padding:5px 7px}
+  .nav a{padding:7px 9px;font-size:12px}
+  .wrap,.shop-main{padding:18px 14px 100px}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pd{grid-template-columns:1fr}
+  .pd .info{padding:22px}
+  .filters .search{width:100%;margin-left:0}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .queue{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal-root"></div>
+<div id="toast" class="toast hidden"></div>
+
+<script>
+"use strict";
+/* ============ Constants & i18n ============ */
+const CATS = ["footwear","tops","bottoms","jackets","hoodies","accessories"];
+const HOLD = ["draft","requested","pulled","kept"]; // statuses that reserve stock and count against allocation
+const DEFAULT_CONFIG = {eventName:"Nike Seeding Suite", pin:"", alloc:{footwear:1,tops:2,bottoms:1,jackets:1,hoodies:1,accessories:2}};
+
+const T = {
+ en:{
+  guest:"Guest", boh:"Back of House", admin:"Admin",
+  welcome:"Welcome", selectName:"Tap your name to start your lookbook.", searchName:"Search name",
+  noGuests:"No guests yet. Import the guest list in Admin.", noProducts:"No products yet. Import inventory in Admin.",
+  hi:"Hi", buildLook:"Build your lookbook. Tap any product to add it.",
+  all:"All", footwear:"Footwear", tops:"Tops", bottoms:"Bottoms", jackets:"Jackets", hoodies:"Hoodies", accessories:"Accessories",
+  search:"Search", available:"available", soldOut:"Sold out", inLookbook:"In lookbook",
+  lookbook:"My Lookbook", lookbookEmpty:"Your lookbook is empty. Tap products to add them.",
+  addToLookbook:"Add to lookbook", selectSize:"Select size", yourSize:"Your size", allocFull:"You've reached your {cat} allocation",
+  added:"Added to your lookbook", removed:"Removed", sendStylists:"Send to stylists", sent:"Sent to the stylists. They're pulling your pieces.",
+  st_draft:"In lookbook", st_requested:"Being pulled", st_pulled:"Ready to try", st_kept:"Taking home", st_returned:"Returned", st_unavailable:"Unavailable",
+  keep:"Keep", ret:"Return", undo:"Undo", remove:"Remove", finish:"Finish", switchGuest:"Switch guest",
+  finishQ:"Finish and confirm your take-home selection?", finished:"All set. Enjoy!", confirm:"Confirm", cancel:"Cancel",
+  rack:"Rack", onRack:"On rack", pendingDecision:"Try on and choose Keep or Return.", left:"left", of:"of",
+  toPull:"To pull", pickList:"Pick list", fitting:"Fitting", completed:"Completed",
+  pulled:"Pulled", na:"N/A", markAllPulled:"Mark all pulled", requestedAgo:"requested", nothingToPull:"Nothing to pull. Queue is clear.",
+  nobodyFitting:"No one in fitting right now.", noneCompleted:"No completed guests yet.",
+  forGuests:"For", qty:"Qty", size:"Size", sku:"SKU", product:"Product", color:"Color", category:"Category", stock:"Stock", reserved:"Reserved", kept:"Kept",
+  guestsLbl:"Guests", itemsToPull:"Items to pull", onRackLbl:"On rack", takingHome:"Taking home",
+  changeSize:"Change size", reopen:"Reopen", sizes:"Sizes", top:"Top", bottom:"Bottom", shoe:"Shoe", items:"items",
+  eventSettings:"Event", eventName:"Event name", defaultAlloc:"Default allocation per guest", staffPin:"Staff PIN (locks Back of House & Admin on guest iPads)",
+  importData:"Import", inventoryFile:"Inventory Excel", guestFile:"Guest list Excel", replaceAll:"Replace all", mergeUpdate:"Add / update",
+  importBtn:"Import", templates:"Templates", dlInvTpl:"Inventory template", dlGuestTpl:"Guest template", exportReport:"Export report",
+  images:"Product images", imagesHelp:"Drop images named by SKU (e.g. DD1391-100.jpg) to match automatically. Or open a product to paste an image copied from Nike.com.",
+  dropHere:"Drop images here or", browse:"browse", missingImages:"missing images", inventory:"Inventory", guestList:"Guest list",
+  onlyMissing:"Only missing images", findNike:"Find on Nike.com", pasteHint:"Copy the image on Nike.com (right-click → Copy Image), then press ⌘V / Ctrl+V here.",
+  uploadImage:"Upload image", removeImage:"Remove image", save:"Save", saved:"Saved", edit:"Edit", del:"Delete", addGuest:"Add guest",
+  name:"Name", role:"Role / team", notes:"Notes", status:"Status", resetLook:"Reset lookbook", deleteQ:"Delete this?",
+  danger:"Reset", clearPicks:"Clear all lookbooks", clearAll:"Delete all data", clearPicksQ:"Clear every lookbook and fitting status? Inventory and guests stay.",
+  clearAllQ:"Delete ALL products, guests and lookbooks? This cannot be undone.",
+  importing:"Importing", imported:"Imported", rowsSkipped:"rows skipped", matched:"matched", unmatched:"not matched",
+  enterPin:"Staff PIN", wrongPin:"Wrong PIN", unlock:"Unlock",
+  noDb:"Can't reach the database. Check the Supabase settings in Vercel.", login:"Staff sign in", email:"Email", password:"Password", signIn:"Sign in", signOut:"Sign out", badLogin:"Wrong email or password", fetchNike:"Fetch missing from Nike.com", fetchNikeHelp:"Tries to pull each missing image from Nike by SKU. Anything not found can be dropped or pasted below.", found:"found", notFound:"not found", connecting:"Connecting…", localMode:"Local demo — data is not shared",
+  readOnly:"You have view-only access, so changes won't save.", noAssets:"Image storage isn't available.",
+  sizesStock:"Sizes & stock (e.g. S=2, M=4, L=3)", newProduct:"Product", waiting:"Not started", shopping:"Shopping", submitted:"Submitted", inFitting:"Fitting", done:"Done",
+  pickListHelp:"Everything requested, grouped for pulling. Marking a line pulls it for every guest listed.",
+  unknownProduct:"Removed product", swapTo:"Swap to", stockOut:"Out of stock in all other sizes",
+ },
+ es:{
+  guest:"Invitado", boh:"Bodega", admin:"Admin",
+  welcome:"Bienvenido", selectName:"Toca tu nombre para empezar tu lookbook.", searchName:"Buscar nombre",
+  noGuests:"Aún no hay invitados. Importa la lista en Admin.", noProducts:"Aún no hay productos. Importa el inventario en Admin.",
+  hi:"Hola", buildLook:"Arma tu lookbook. Toca un producto para agregarlo.",
+  all:"Todo", footwear:"Calzado", tops:"Tops", bottoms:"Bottoms", jackets:"Chamarras", hoodies:"Sudaderas", accessories:"Accesorios",
+  search:"Buscar", available:"disponibles", soldOut:"Agotado", inLookbook:"En lookbook",
+  lookbook:"Mi Lookbook", lookbookEmpty:"Tu lookbook está vacío. Toca productos para agregarlos.",
+  addToLookbook:"Agregar al lookbook", selectSize:"Elige talla", yourSize:"Tu talla", allocFull:"Llegaste a tu límite de {cat}",
+  added:"Agregado a tu lookbook", removed:"Eliminado", sendStylists:"Enviar a stylists", sent:"Enviado. El equipo está preparando tus piezas.",
+  st_draft:"En lookbook", st_requested:"En preparación", st_pulled:"Listo para probar", st_kept:"Me lo llevo", st_returned:"Devuelto", st_unavailable:"No disponible",
+  keep:"Me lo llevo", ret:"Devolver", undo:"Deshacer", remove:"Quitar", finish:"Terminar", switchGuest:"Cambiar invitado",
+  finishQ:"¿Terminar y confirmar tu selección?", finished:"¡Listo! Disfrútalo.", confirm:"Confirmar", cancel:"Cancelar",
+  rack:"Rack", onRack:"En rack", pendingDecision:"Pruébatelo y elige Me lo llevo o Devolver.", left:"restantes", of:"de",
+  toPull:"Por surtir", pickList:"Pick list", fitting:"Probador", completed:"Completados",
+  pulled:"Surtido", na:"N/D", markAllPulled:"Marcar todo surtido", requestedAgo:"solicitado", nothingToPull:"Nada por surtir.",
+  nobodyFitting:"Nadie en probador ahora.", noneCompleted:"Aún no hay invitados completados.",
+  forGuests:"Para", qty:"Cant.", size:"Talla", sku:"SKU", product:"Producto", color:"Color", category:"Categoría", stock:"Stock", reserved:"Apartado", kept:"Entregado",
+  guestsLbl:"Invitados", itemsToPull:"Piezas por surtir", onRackLbl:"En rack", takingHome:"Se lo llevan",
+  changeSize:"Cambiar talla", reopen:"Reabrir", sizes:"Tallas", top:"Top", bottom:"Bottom", shoe:"Calzado", items:"piezas",
+  eventSettings:"Evento", eventName:"Nombre del evento", defaultAlloc:"Asignación por invitado (default)", staffPin:"PIN de staff (bloquea Bodega y Admin en iPads de invitados)",
+  importData:"Importar", inventoryFile:"Excel de inventario", guestFile:"Excel de invitados", replaceAll:"Reemplazar todo", mergeUpdate:"Agregar / actualizar",
+  importBtn:"Importar", templates:"Plantillas", dlInvTpl:"Plantilla inventario", dlGuestTpl:"Plantilla invitados", exportReport:"Exportar reporte",
+  images:"Imágenes de producto", imagesHelp:"Arrastra imágenes nombradas por SKU (ej. DD1391-100.jpg) para asignarlas solas. O abre un producto y pega una imagen copiada de Nike.com.",
+  dropHere:"Arrastra imágenes aquí o", browse:"busca", missingImages:"sin imagen", inventory:"Inventario", guestList:"Lista de invitados",
+  onlyMissing:"Solo sin imagen", findNike:"Buscar en Nike.com", pasteHint:"Copia la imagen en Nike.com (clic derecho → Copiar imagen) y presiona ⌘V / Ctrl+V aquí.",
+  uploadImage:"Subir imagen", removeImage:"Quitar imagen", save:"Guardar", saved:"Guardado", edit:"Editar", del:"Borrar", addGuest:"Agregar invitado",
+  name:"Nombre", role:"Rol / equipo", notes:"Notas", status:"Estatus", resetLook:"Reiniciar lookbook", deleteQ:"¿Borrar?",
+  danger:"Reiniciar", clearPicks:"Borrar todos los lookbooks", clearAll:"Borrar todos los datos", clearPicksQ:"¿Borrar todos los lookbooks y estatus de probador? Inventario e invitados se conservan.",
+  clearAllQ:"¿Borrar TODOS los productos, invitados y lookbooks? No se puede deshacer.",
+  importing:"Importando", imported:"Importado", rowsSkipped:"filas omitidas", matched:"asignadas", unmatched:"sin coincidencia",
+  enterPin:"PIN de staff", wrongPin:"PIN incorrecto", unlock:"Desbloquear",
+  noDb:"No se puede conectar a la base de datos. Revisa la configuración de Supabase en Vercel.", login:"Acceso staff", email:"Email", password:"Contraseña", signIn:"Entrar", signOut:"Cerrar sesión", badLogin:"Email o contraseña incorrectos", fetchNike:"Traer faltantes de Nike.com", fetchNikeHelp:"Intenta traer cada imagen faltante de Nike por SKU. Lo que no encuentre se puede arrastrar o pegar abajo.", found:"encontradas", notFound:"no encontradas", connecting:"Conectando…", localMode:"Demo local — los datos no se comparten",
+  readOnly:"Tienes acceso de solo lectura; los cambios no se guardarán.", noAssets:"El almacenamiento de imágenes no está disponible.",
+  sizesStock:"Tallas y stock (ej. S=2, M=4, L=3)", newProduct:"Producto", waiting:"Sin iniciar", shopping:"Eligiendo", submitted:"Enviado", inFitting:"Probador", done:"Listo",
+  pickListHelp:"Todo lo solicitado, agrupado para surtir. Marcar una línea la surte para todos los invitados listados.",
+  unknownProduct:"Producto eliminado", swapTo:"Cambiar a", stockOut:"Sin stock en otras tallas",
+ }
+};
+let LANG = "en";
+try{ LANG = localStorage.getItem("ss_lang") || "en"; }catch(e){}
+const t = (k, vars) => { let s = (T[LANG] && T[LANG][k]) || T.en[k] || k; if(vars) for(const v in vars) s = s.replace("{"+v+"}", vars[v]); return s; };
+
+/* ============ Helpers ============ */
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $ = (s, r=document) => r.querySelector(s);
+const norm = s => String(s==null?"":s).normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");
+const skuKey = s => String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+const docId = s => String(s||"").trim().toUpperCase().replace(/[^A-Z0-9_\-.~]/g,"-").replace(/^\.+/,"x").slice(0,120) || ("P"+Date.now());
+const rid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+const now = () => Date.now();
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+function ago(ts){ if(!ts) return ""; const m = Math.round((now()-ts)/60000); if(m<1) return LANG==="es"?"ahora":"now"; if(m<60) return m+" min"; const h=Math.floor(m/60); return h+" h "+(m%60)+" min"; }
+const SIZE_ORDER = ["XXXS","3XS","XXS","2XS","XS","S","M","L","XL","XXL","2XL","XXXL","3XL","4XL","5XL"];
+function sizeSort(a,b){
+  const A=String(a).toUpperCase().trim(), B=String(b).toUpperCase().trim();
+  const ia=SIZE_ORDER.indexOf(A.split(/[\s(]/)[0]), ib=SIZE_ORDER.indexOf(B.split(/[\s(]/)[0]);
+  if(ia>-1&&ib>-1) return ia-ib;
+  const na=parseFloat(A.replace(/[^0-9.]/g,"")), nb=parseFloat(B.replace(/[^0-9.]/g,""));
+  if(!isNaN(na)&&!isNaN(nb)&&na!==nb) return na-nb;
+  if(ia>-1) return -1; if(ib>-1) return 1;
+  return A.localeCompare(B);
+}
+function normCat(v){
+  const n = norm(v);
+  if(!n) return "accessories";
+  const m = [
+    ["footwear",["footwear","shoe","shoes","sneaker","calzado","tenis","zapato","boot","slide","sandal","cleat","taco","fw"]],
+    ["hoodies",["hood","sudadera","crew","fleece","sweat","pullover"]],
+    ["jackets",["jacket","chamarra","chaqueta","vest","chaleco","windrunner","parka","coat","anorak","outerwear","rompevientos"]],
+    ["bottoms",["bottom","pant","short","pantalon","legging","tight","jogger","skirt","falda","mallas"]],
+    ["tops",["top","tee","tshirt","shirt","playera","camiseta","polo","jersey","tank","bra","bralette","longsleeve","blusa","app"]],
+    ["accessories",["acc","accesorio","cap","hat","gorra","bag","mochila","backpack","sock","calceta","glove","guante","headband","ball","balon","bottle","beanie","equipment","eq"]],
+  ];
+  for(const [c,keys] of m) if(n===c || keys.some(k=>n.startsWith(k)||n.includes(k))) return c;
+  return "accessories";
+}
+function sizeForCat(g, cat){
+  if(!g) return "";
+  if(cat==="footwear") return g.shoeSize||"";
+  if(cat==="bottoms") return g.bottomSize||"";
+  if(cat==="accessories") return "";
+  return g.topSize||"";
+}
+function parseSizesText(txt){
+  const out={};
+  String(txt||"").split(/[,;\n]+/).forEach(part=>{
+    const m = part.split(/[=:]/); if(m.length<2) return;
+    const s=m[0].trim(), q=parseInt(m[1],10);
+    if(s && !isNaN(q)) out[s]=Math.max(0,q);
+  });
+  return out;
+}
+const sizesText = sz => Object.keys(sz||{}).sort(sizeSort).map(s=>s+"="+sz[s]).join(", ");
+
+const GLYPH = {
+ footwear:'<svg viewBox="0 0 100 50" fill="none" stroke="#000" stroke-width="3"><path d="M6 36 C6 24 10 16 14 14 L30 20 C38 23 44 23 50 22 L62 24 C78 27 92 30 94 38 L94 42 L6 42 Z"/><path d="M6 42 L94 42"/></svg>',
+ tops:'<svg viewBox="0 0 100 90" fill="none" stroke="#000" stroke-width="3"><path d="M36 6 C40 14 60 14 64 6 L90 18 L82 38 L72 34 L72 86 L28 86 L28 34 L18 38 L10 18 Z"/></svg>',
+ bottoms:'<svg viewBox="0 0 80 100" fill="none" stroke="#000" stroke-width="3"><path d="M14 6 L66 6 L74 96 L48 96 L40 36 L32 96 L6 96 Z"/><path d="M14 16 L66 16"/></svg>',
+ jackets:'<svg viewBox="0 0 100 100" fill="none" stroke="#000" stroke-width="3"><path d="M36 6 L50 16 L64 6 L90 20 L94 80 L80 82 L78 46 L76 94 L24 94 L22 46 L20 82 L6 80 L10 20 Z"/><path d="M50 16 L50 94"/></svg>',
+ hoodies:'<svg viewBox="0 0 100 100" fill="none" stroke="#000" stroke-width="3"><path d="M34 18 C34 4 66 4 66 18 L90 26 L94 82 L80 84 L78 50 L76 94 L24 94 L22 50 L20 84 L6 82 L10 26 Z"/><path d="M38 20 C42 32 58 32 62 20"/><path d="M36 66 L64 66 L64 80 L36 80 Z"/></svg>',
+ accessories:'<svg viewBox="0 0 100 70" fill="none" stroke="#000" stroke-width="3"><path d="M14 44 C14 18 30 8 50 8 C70 8 86 18 86 44 Z"/><path d="M14 44 C30 50 60 52 96 46 L94 54 C70 58 36 58 12 52 Z"/></svg>',
+};
+function imgHTML(p, showSku){
+  const url = p && p.imageId ? imageUrl(p.imageId) : "";
+  if(url) return '<div class="ph"><img loading="lazy" src="'+esc(url)+'" alt=""></div>';
+  const cat = (p && p.category) || "accessories";
+  return '<div class="ph"><div class="glyph">'+(GLYPH[cat]||GLYPH.accessories)+'</div>'+(showSku && p ? '<div class="skutag">'+esc(p.sku)+'</div>' : '')+'</div>';
+}
+
+function imageUrl(id){
+  id=String(id);
+  if(id.startsWith("local:")) return id.slice(6);
+  if(!S.cfg) return "";
+  return S.cfg.supabaseUrl.replace(/\/$/,"")+"/storage/v1/object/public/"+BUCKET+"/"+id.split("/").map(encodeURIComponent).join("/");
+}
+const BUCKET="product-images";
+/* ============ State ============ */
+const S = {
+  db:null, user:null, assets:null, downloads:null, local:false, connected:false, loadTimedOut:false, readOnly:false,
+  products:{}, guests:{}, picks:{}, config:{...DEFAULT_CONFIG},
+  view:"guest", cat:"all", q:"", gq:"", activeGuest:null, lbOpen:false,
+  bohTab:"pull", admQ:"", admMissing:false, unlocked:false,
+  modal:null, busy:null,
+};
+try{ S.activeGuest = localStorage.getItem("ss_active") || null; }catch(e){}
+try{ S.unlocked = sessionStorage.getItem("ss_unlocked")==="1"; }catch(e){}
+
+/* ============ Local mock DB (demo mode when no backend is configured) ============ */
+function makeMockDB(){
+  const store = new Map(); const subs = new Set();
+  const notify = () => subs.forEach(s=>s());
+  const colDocs = path => [...store.entries()].filter(([k])=>k.startsWith(path+"/") && k.slice(path.length+1).indexOf("/")===-1)
+     .map(([k,v])=>({id:k.slice(path.length+1),exists:true,data:()=>v,metadata:{fromCache:false,hasPendingWrites:false}}));
+  const docRef = path => ({ id:path.split("/").pop(), path,
+    get: async()=>({id:path.split("/").pop(),exists:store.has(path),data:()=>store.get(path)}),
+    set: async d=>{store.set(path,JSON.parse(JSON.stringify(d)));notify();},
+    update: async d=>{ if(!store.has(path)) throw {code:"invalid_argument"}; const cur=store.get(path); const merge=(a,b)=>{for(const k in b){ if(b[k]&&typeof b[k]==="object"&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==="object") merge(a[k],b[k]); else a[k]=b[k];} return a;}; store.set(path,merge(JSON.parse(JSON.stringify(cur)),JSON.parse(JSON.stringify(d))));notify();},
+    delete: async()=>{store.delete(path);notify();},
+    onSnapshot:(next)=>{const f=()=>{next({id:path.split("/").pop(),exists:store.has(path),data:()=>store.get(path),metadata:{fromCache:false}})};subs.add(f);setTimeout(f,30);return()=>subs.delete(f);}
+  });
+  return {
+    doc: docRef,
+    collection: path => ({ path, doc:id=>docRef(path+"/"+(id||rid())),
+      get: async()=>{const d=colDocs(path);return {docs:d,size:d.length,empty:!d.length};},
+      onSnapshot:(next)=>{const f=()=>{const d=colDocs(path);next({docs:d,size:d.length,empty:!d.length,metadata:{fromCache:false},docChanges:()=>[]})};subs.add(f);setTimeout(f,30);return()=>subs.delete(f);}
+    })
+  };
+}
+
+/* ============ DB writes ============ */
+async function w(fn, label){
+  for(let i=0;i<4;i++){
+    try{ return await fn(); }
+    catch(e){
+      const c = e && e.code;
+      if((c==="unavailable"||c==="resource_exhausted") && i<3){ await sleep(400*(i+1)+Math.random()*300); continue; }
+      if(c==="invalid_argument" && !S.readOnly){ /* may be permission */ }
+      if(c==="quota_exceeded"){ toast(e.message||"Storage full"); throw e; }
+      console.warn("write failed", label, e); toast((label?label+": ":"")+(e && (e.message||e.code) || "error")); throw e;
+    }
+  }
+}
+const pDoc = id => S.db.doc("products/"+id);
+const gDoc = id => S.db.doc("guests/"+id);
+const kDoc = id => S.db.doc("picks/"+id);
+const cfgDoc = () => S.db.doc("config/event");
+
+/* ============ Derived ============ */
+function picksOf(gid){ return Object.values(S.picks).filter(p=>p.guestId===gid).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)); }
+function reservedMap(){ // sku|size -> count
+  const m={};
+  for(const p of Object.values(S.picks)) if(HOLD.includes(p.status)){ const k=p.sku+"|"+p.size; m[k]=(m[k]||0)+1; }
+  return m;
+}
+function availOf(prod, size, res){ res=res||reservedMap(); return Math.max(0,((prod.sizes||{})[size]||0) - (res[prod.id+"|"+size]||0)); }
+function totalAvail(prod, res){ res=res||reservedMap(); return Object.keys(prod.sizes||{}).reduce((a,s)=>a+availOf(prod,s,res),0); }
+function totalStock(prod){ return Object.values(prod.sizes||{}).reduce((a,b)=>a+(+b||0),0); }
+function allocOf(g){ const a={}; CATS.forEach(c=>{ const v = g && g.alloc && g.alloc[c]; a[c] = (v===0||v)? +v : (+S.config.alloc[c]||0); }); return a; }
+function usedOf(gid){ const u={}; CATS.forEach(c=>u[c]=0); picksOf(gid).forEach(p=>{ if(HOLD.includes(p.status)) u[p.cat]=(u[p.cat]||0)+1; }); return u; }
+function guestStage(g){
+  const ps = picksOf(g.id);
+  if(g.completedAt) return "done";
+  if(ps.some(p=>p.status==="pulled")) return "inFitting";
+  if(ps.some(p=>p.status==="requested")) return "submitted";
+  if(ps.length) return "shopping";
+  return "waiting";
+}
+const sortedProducts = () => Object.values(S.products).sort((a,b)=> CATS.indexOf(a.category)-CATS.indexOf(b.category) || String(a.name).localeCompare(String(b.name)));
+const sortedGuests = () => Object.values(S.guests).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+
+/* ============ Render core ============ */
+let renderQueued=false, pendingRender=false;
+function render(){ if(renderQueued) return; renderQueued=true; requestAnimationFrame(()=>{ renderQueued=false; doRender(); }); }
+function isEditing(){ const a=document.activeElement; return a && a.closest && a.closest("#app,#modal-root") && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && !a.dataset.live; }
+function doRender(){
+  if(isEditing()){ pendingRender=true; return; }
+  pendingRender=false;
+  const a = document.activeElement; const focusId = a && a.id; let sel=null;
+  try{ if(a && a.selectionStart!=null) sel=[a.selectionStart,a.selectionEnd]; }catch(e){}
+  const scrolls = {}; document.querySelectorAll("[data-scroll]").forEach(el=>scrolls[el.dataset.scroll]=el.scrollTop);
+  document.title = (S.config.eventName||"Nike Seeding Suite");
+  $("#app").innerHTML = topBar() + viewHTML();
+  renderModal();
+  document.querySelectorAll("[data-scroll]").forEach(el=>{ if(scrolls[el.dataset.scroll]!=null) el.scrollTop=scrolls[el.dataset.scroll]; });
+  if(focusId){ const el=document.getElementById(focusId); if(el){ el.focus(); if(sel) try{el.setSelectionRange(sel[0],sel[1]);}catch(e){} } }
+}
+document.addEventListener("focusout", ()=>setTimeout(()=>{ if(pendingRender && !isEditing()) doRender(); },0));
+
+function topBar(){
+  const v=S.view;
+  return '<header class="top"><div class="top-in">'+
+    '<div class="brand"><b>'+esc(S.config.eventName||"Nike Seeding Suite")+'</b><span>'+(S.local?esc(t("localMode")):"")+'</span></div>'+
+    '<nav class="nav">'+
+      '<a href="#guest" class="'+(v==="guest"?"on":"")+'">'+t("guest")+'</a>'+
+      '<a href="#back-of-house" class="'+(v==="boh"?"on":"")+'">'+t("boh")+'</a>'+
+      '<a href="#admin" class="'+(v==="admin"?"on":"")+'">'+t("admin")+'</a>'+
+    '</nav>'+
+    '<div class="lang"><button data-act="lang" data-v="en" class="'+(LANG==="en"?"on":"")+'">EN</button><button data-act="lang" data-v="es" class="'+(LANG==="es"?"on":"")+'">ES</button></div>'+
+    '<span class="sync '+(S.connected?"ok":"")+'" title="'+(S.connected?"Live":"…")+'"></span>'+
+  '</div></header>';
+}
+function viewHTML(){
+  if(S.needLogin) return loginHTML();
+  if(!S.db) return '<div class="wrap"><div class="empty">'+esc(S.dbFailed?t("noDb"):t("connecting"))+'</div></div>';
+  let banner = "";
+  if(S.dbFailed) banner = '<div class="wrap" style="padding-bottom:0"><div class="notice">'+esc(t("noDb"))+'</div></div>';
+  if(S.view==="boh") return banner+bohHTML();
+  if(S.view==="admin") return banner+adminHTML();
+  return banner+guestHTML();
+}
+
+function loginHTML(){
+  return '<div class="wrap" style="max-width:420px;padding-top:12vh"><div class="eyebrow">'+esc(S.config.eventName||"Nike Seeding Suite")+'</div><h1 style="margin:8px 0 26px">'+esc(t("login"))+'</h1>'+
+   '<form id="login-form" style="display:grid;gap:12px"><label class="fl">'+esc(t("email"))+'<input class="input" id="li-email" type="email" autocomplete="username" required></label>'+
+   '<label class="fl">'+esc(t("password"))+'<input class="input" id="li-pass" type="password" autocomplete="current-password" required></label>'+
+   '<p class="small" id="li-err" style="min-height:18px"></p><button class="btn block" type="submit">'+esc(t("signIn"))+'</button></form></div>';
+}
+/* ============ GUEST VIEW ============ */
+function guestHTML(){
+  const g = S.activeGuest && S.guests[S.activeGuest];
+  if(!g) return pickerHTML();
+  const res = reservedMap();
+  const alloc = allocOf(g), used = usedOf(g.id);
+  const myPicks = picksOf(g.id);
+  const inLb = new Set(myPicks.filter(p=>HOLD.includes(p.status)).map(p=>p.sku));
+  let prods = sortedProducts().filter(p=> alloc[p.category]>0 || S.cat===p.category);
+  if(S.cat!=="all") prods = prods.filter(p=>p.category===S.cat);
+  if(S.q){ const q=norm(S.q); prods = prods.filter(p=>norm(p.name+" "+p.sku+" "+p.color).includes(q)); }
+  const cats = CATS.filter(c=>alloc[c]>0);
+  const first = String(g.name||"").split(" ")[0];
+
+  let h = '<div class="shop"><main class="shop-main">';
+  h += '<div class="hello"><div><div class="eyebrow">'+esc(t("welcome"))+'</div><h1 style="margin-top:6px">'+esc(t("hi"))+', '+esc(first)+'.</h1><p class="muted" style="margin-top:8px">'+esc(t("buildLook"))+'</p></div>'+
+       '<button class="btn ghost sm" data-act="switchGuest">'+esc(t("switchGuest"))+'</button></div>';
+  h += '<div class="alloc">'+cats.map(c=>{ const full=used[c]>=alloc[c]; return '<div class="a '+(full?"full":"")+'"><div class="k">'+esc(t(c))+'</div><div class="v">'+used[c]+' <span style="opacity:.5;font-weight:400">/ '+alloc[c]+'</span></div></div>'; }).join("")+'</div>';
+  h += '<div class="filters"><button class="chip '+(S.cat==="all"?"on":"")+'" data-act="cat" data-v="all">'+esc(t("all"))+'</button>'+
+       cats.map(c=>'<button class="chip '+(S.cat===c?"on":"")+'" data-act="cat" data-v="'+c+'">'+esc(t(c))+'</button>').join("")+
+       '<input id="q-guest" data-live="1" class="input sm search" placeholder="'+esc(t("search"))+'" value="'+esc(S.q)+'"></div>';
+  if(!prods.length) h += '<div class="empty">'+esc(Object.keys(S.products).length?"—":t("noProducts"))+'</div>';
+  h += '<div class="grid">'+prods.map(p=>{
+      const av = totalAvail(p,res); const mine = inLb.has(p.id);
+      return '<button class="pcard '+(av<=0&&!mine?"out":"")+'" data-act="openProduct" data-id="'+esc(p.id)+'"><div style="position:relative">'+imgHTML(p)+
+        (mine?'<span class="badge solid inlb">'+esc(t("inLookbook"))+'</span>':'')+'</div><div class="meta"><div class="nm">'+esc(p.name)+'</div><div class="cl">'+esc(p.color||"")+'</div>'+
+        '<div class="av">'+(av>0? av+' '+esc(t("available")) : esc(t("soldOut")))+'</div></div></button>';
+    }).join("")+'</div>';
+  h += '</main>';
+  h += '<aside class="shop-side '+(S.lbOpen?"open":"")+'">'+lookbookHTML(g, myPicks)+'</aside>';
+  const cnt = myPicks.filter(p=>HOLD.includes(p.status)).length;
+  h += '<button class="btn lb-toggle" data-act="toggleLb">'+esc(t("lookbook"))+' · '+cnt+'</button>';
+  h += '</div>';
+  return h;
+}
+function pickerHTML(){
+  const gs = sortedGuests().filter(g=>!S.gq || norm(g.name+" "+(g.role||"")).includes(norm(S.gq)));
+  let h = '<div class="wrap"><div class="picker-head"><div><div class="eyebrow">'+esc(S.config.eventName||"")+'</div><h1 style="margin-top:8px">'+esc(t("welcome"))+'.</h1><p class="muted" style="margin-top:10px;font-size:17px">'+esc(t("selectName"))+'</p></div>'+
+    '<input id="q-gname" data-live="1" class="input" style="max-width:300px" placeholder="'+esc(t("searchName"))+'" value="'+esc(S.gq)+'"></div>';
+  if(!Object.keys(S.guests).length) return h+'<div class="empty">'+esc(t("noGuests"))+'</div></div>';
+  h += '<div class="guest-grid">'+gs.map(g=>{
+    const st = guestStage(g);
+    return '<button class="gtile '+(st==="done"?"done":"")+'" data-act="pickGuest" data-id="'+esc(g.id)+'"><div class="n">'+esc(g.name)+'</div><div class="row" style="justify-content:space-between"><span class="muted small">'+esc(g.role||"")+'</span>'+(st!=="waiting"?'<span class="badge '+(st==="done"?"grey":"")+'">'+esc(t(st))+'</span>':'')+'</div></button>';
+  }).join("")+'</div></div>';
+  return h;
+}
+function statusBadge(st){
+  const cls = {draft:"faint",requested:"",pulled:"solid",kept:"solid",returned:"grey",unavailable:"grey"}[st]||"";
+  return '<span class="badge '+cls+'">'+esc(t("st_"+st))+'</span>';
+}
+function lookbookHTML(g, ps){
+  const visible = ps.filter(p=>p.status!=="returned" || true);
+  const drafts = ps.filter(p=>p.status==="draft").length;
+  const pending = ps.filter(p=>p.status==="requested"||p.status==="pulled").length;
+  const pulled = ps.filter(p=>p.status==="pulled").length;
+  let h = '<div class="lb-head"><div class="row"><h2>'+esc(t("lookbook"))+'</h2><span class="spacer"></span>'+(g.rack?'<span class="badge solid">'+esc(t("rack"))+' '+esc(g.rack)+'</span>':'')+
+          '<button class="btn ghost xs lb-close" data-act="toggleLb" style="margin-left:6px">✕</button></div>'+
+          (pulled?'<p class="small muted" style="margin-top:6px">'+esc(t("pendingDecision"))+'</p>':'')+'</div>';
+  h += '<div class="lb-list" data-scroll="lb">';
+  if(!visible.length) h += '<div class="empty small">'+esc(t("lookbookEmpty"))+'</div>';
+  const order = {pulled:0,draft:1,requested:2,kept:3,unavailable:4,returned:5};
+  visible.slice().sort((a,b)=>(order[a.status]-order[b.status])||((a.createdAt||0)-(b.createdAt||0))).forEach(pk=>{
+    const p = S.products[pk.sku] || {sku:pk.sku,name:t("unknownProduct"),category:pk.cat};
+    let acts = statusBadge(pk.status);
+    if(pk.status==="draft"||pk.status==="unavailable") acts += '<button class="link" data-act="removePick" data-id="'+esc(pk.id)+'">'+esc(t("remove"))+'</button>';
+    if(pk.status==="pulled") acts = '<button class="btn xs" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="kept">'+esc(t("keep"))+'</button><button class="btn ghost xs" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="returned">'+esc(t("ret"))+'</button>';
+    if((pk.status==="kept"||pk.status==="returned") && !g.completedAt) acts += '<button class="link" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="pulled">'+esc(t("undo"))+'</button>';
+    h += '<div class="lbi" style="'+(pk.status==="returned"?"opacity:.45":"")+'">'+imgHTML(p)+'<div><div class="nm">'+esc(p.name)+'</div><div class="sub">'+esc(p.color||"")+' · '+esc(t("size"))+' '+esc(pk.size)+'</div><div class="acts">'+acts+'</div></div></div>';
+  });
+  h += '</div><div class="lb-foot">';
+  h += '<button class="btn block" data-act="submitLb" '+(drafts?"":"disabled")+'>'+esc(t("sendStylists"))+(drafts?' ('+drafts+')':'')+'</button>';
+  h += '<button class="btn ghost block" data-act="finishGuest" '+(ps.length && !drafts && !pending ? "" : "disabled")+'>'+esc(t("finish"))+'</button>';
+  h += '</div>';
+  return h;
+}
+function productModalHTML(id){
+  const p = S.products[id]; if(!p) return "";
+  const g = S.guests[S.activeGuest];
+  const res = reservedMap();
+  const alloc = allocOf(g), used = usedOf(g.id);
+  const full = used[p.category] >= alloc[p.category];
+  const rec = sizeForCat(g, p.category);
+  const sizes = Object.keys(p.sizes||{}).sort(sizeSort);
+  const sel = S.modal.size;
+  let h = '<div class="pd"><div>'+imgHTML(p,true)+'</div><div class="info">';
+  h += '<div><div class="eyebrow">'+esc(t(p.category))+'</div><h2 style="margin-top:8px">'+esc(p.name)+'</h2><p class="muted" style="margin-top:6px">'+esc(p.color||"")+'</p><p class="muted small" style="margin-top:2px">'+esc(p.sku)+'</p></div>';
+  h += '<div><div class="row" style="margin-bottom:8px"><span class="eyebrow">'+esc(t("selectSize"))+'</span><span class="spacer"></span>'+(rec?'<span class="small muted">'+esc(t("yourSize"))+': <b style="color:#111">'+esc(rec)+'</b></span>':'')+'</div>';
+  h += '<div class="sizes">'+sizes.map(s=>{ const av=availOf(p,s,res); const isRec = rec && norm(rec)===norm(s);
+       return '<button class="size '+(sel===s?"on":"")+' '+(isRec?"rec":"")+'" data-act="pickSize" data-v="'+esc(s)+'" '+(av<=0?"disabled":"")+'>'+esc(s)+'<small>'+av+' '+esc(t("left"))+'</small></button>'; }).join("")+'</div></div>';
+  h += '<div style="margin-top:auto">';
+  if(full) h += '<p class="small" style="margin-bottom:10px">'+esc(t("allocFull",{cat:t(p.category).toLowerCase()}))+'</p>';
+  h += '<button class="btn block" data-act="addPick" '+((sel && !full && availOf(p,sel,res)>0)?"":"disabled")+'>'+esc(t("addToLookbook"))+'</button></div>';
+  h += '</div></div>';
+  return h;
+}
+
+/* ============ BACK OF HOUSE ============ */
+function bohHTML(){
+  const gs = sortedGuests();
+  const allPicks = Object.values(S.picks);
+  const req = allPicks.filter(p=>p.status==="requested");
+  const pulled = allPicks.filter(p=>p.status==="pulled");
+  const kept = allPicks.filter(p=>p.status==="kept");
+  const fittingGuests = gs.filter(g=>!g.completedAt && picksOf(g.id).some(p=>p.status==="pulled"||p.status==="kept"||p.status==="returned"));
+  const doneGuests = gs.filter(g=>g.completedAt);
+  let h = '<div class="wrap"><div class="row" style="align-items:flex-end;flex-wrap:wrap"><div><div class="eyebrow">'+esc(S.config.eventName||"")+'</div><h1 style="margin-top:6px">'+esc(t("boh"))+'</h1></div></div>';
+  h += '<div class="stats"><div class="stat"><div class="k">'+esc(t("itemsToPull"))+'</div><div class="v">'+req.length+'</div></div><div class="stat"><div class="k">'+esc(t("onRackLbl"))+'</div><div class="v">'+pulled.length+'</div></div><div class="stat"><div class="k">'+esc(t("takingHome"))+'</div><div class="v">'+kept.length+'</div></div><div class="stat"><div class="k">'+esc(t("completed"))+'</div><div class="v">'+doneGuests.length+' <span style="font-size:16px;color:var(--mute);font-weight:400">/ '+gs.length+'</span></div></div></div>';
+  const tabs = [["pull",t("toPull"),new Set(req.map(p=>p.guestId)).size],["pick",t("pickList"),req.length],["fit",t("fitting"),fittingGuests.length],["done",t("completed"),doneGuests.length]];
+  h += '<div class="tabs">'+tabs.map(([k,l,n])=>'<button class="chip '+(S.bohTab===k?"on":"")+'" data-act="bohTab" data-v="'+k+'">'+esc(l)+' · '+n+'</button>').join("")+'</div>';
+
+  if(S.bohTab==="pull"){
+    const gids = [...new Set(req.slice().sort((a,b)=>(a.requestedAt||0)-(b.requestedAt||0)).map(p=>p.guestId))];
+    if(!gids.length) h += '<div class="empty">'+esc(t("nothingToPull"))+'</div>';
+    h += '<div class="queue">'+gids.map(gid=>{
+      const g = S.guests[gid] || {id:gid,name:"?"};
+      const items = picksOf(gid).filter(p=>p.status==="requested"||p.status==="pulled"||p.status==="unavailable");
+      const firstReq = Math.min(...items.filter(p=>p.status==="requested").map(p=>p.requestedAt||now()));
+      return '<div class="qcard">'+bohGuestHead(g, '<span class="small muted">'+esc(t("requestedAgo"))+' '+esc(ago(firstReq))+'</span>')+
+        items.map(pk=>bohItem(pk, pk.status==="requested"
+          ? '<button class="btn xs" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="pulled">'+esc(t("pulled"))+'</button><button class="btn ghost xs" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="unavailable">'+esc(t("na"))+'</button>'
+          : statusBadge(pk.status)+' <button class="link" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="requested">'+esc(t("undo"))+'</button>', pk.status!=="requested")).join("")+
+        '<div style="padding:12px 16px;border-top:1px solid var(--line)"><button class="btn sm block" data-act="pullAll" data-id="'+esc(gid)+'">'+esc(t("markAllPulled"))+'</button></div></div>';
+    }).join("")+'</div>';
+  }
+  if(S.bohTab==="pick"){
+    const groups = {};
+    req.forEach(pk=>{ const k=pk.sku+"|"+pk.size; (groups[k]=groups[k]||{sku:pk.sku,size:pk.size,cat:pk.cat,picks:[]}).picks.push(pk); });
+    const rows = Object.values(groups).sort((a,b)=>CATS.indexOf(a.cat)-CATS.indexOf(b.cat)||String(a.sku).localeCompare(b.sku)||sizeSort(a.size,b.size));
+    h += '<p class="small muted" style="margin-bottom:14px">'+esc(t("pickListHelp"))+'</p>';
+    if(!rows.length) h += '<div class="empty">'+esc(t("nothingToPull"))+'</div>';
+    else { h += '<table class="tbl"><thead><tr><th></th><th>'+t("product")+'</th><th>'+t("sku")+'</th><th>'+t("size")+'</th><th>'+t("qty")+'</th><th>'+t("forGuests")+'</th><th></th></tr></thead><tbody>';
+      let lastCat="";
+      rows.forEach(r=>{ const p=S.products[r.sku]||{sku:r.sku,name:t("unknownProduct"),category:r.cat};
+        if(r.cat!==lastCat){ lastCat=r.cat; h+='<tr class="cathead"><td colspan="7">'+esc(t(r.cat))+'</td></tr>'; }
+        h += '<tr><td style="width:60px">'+imgHTML(p)+'</td><td><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.color||"")+'</div></td><td>'+esc(p.sku)+'</td><td><b>'+esc(r.size)+'</b></td><td>'+r.picks.length+'</td><td>'+r.picks.map(pk=>esc((S.guests[pk.guestId]||{}).name||"?")+((S.guests[pk.guestId]||{}).rack?' <span class="muted">('+esc(t("rack"))+' '+esc(S.guests[pk.guestId].rack)+')</span>':'')).join("<br>")+'</td><td><button class="btn xs" data-act="pullGroup" data-v="'+esc(r.sku+"|"+r.size)+'">'+esc(t("pulled"))+'</button></td></tr>';
+      });
+      h += '</tbody></table>'; }
+  }
+  if(S.bohTab==="fit"){
+    if(!fittingGuests.length) h += '<div class="empty">'+esc(t("nobodyFitting"))+'</div>';
+    h += '<div class="queue">'+fittingGuests.map(g=>{
+      const items = picksOf(g.id).filter(p=>["pulled","kept","returned","requested"].includes(p.status));
+      return '<div class="qcard">'+bohGuestHead(g,'')+items.map(pk=>{
+        let a;
+        if(pk.status==="pulled") a = '<button class="btn xs" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="kept">'+esc(t("keep"))+'</button><button class="btn ghost xs" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="returned">'+esc(t("ret"))+'</button><button class="link" data-act="swapSize" data-id="'+esc(pk.id)+'">'+esc(t("changeSize"))+'</button>';
+        else if(pk.status==="requested") a = statusBadge("requested");
+        else a = statusBadge(pk.status)+' <button class="link" data-act="setPick" data-id="'+esc(pk.id)+'" data-v="pulled">'+esc(t("undo"))+'</button>';
+        return bohItem(pk, a, pk.status==="returned");
+      }).join("")+'<div style="padding:12px 16px;border-top:1px solid var(--line)"><button class="btn sm block" data-act="finishGuestStaff" data-id="'+esc(g.id)+'" '+(items.some(p=>p.status==="pulled"||p.status==="requested")?"disabled":"")+'>'+esc(t("finish"))+'</button></div></div>';
+    }).join("")+'</div>';
+  }
+  if(S.bohTab==="done"){
+    if(!doneGuests.length) h += '<div class="empty">'+esc(t("noneCompleted"))+'</div>';
+    h += '<div class="queue">'+doneGuests.map(g=>{
+      const items = picksOf(g.id).filter(p=>p.status==="kept");
+      return '<div class="qcard">'+bohGuestHead(g,'<button class="btn ghost xs" data-act="reopenGuest" data-id="'+esc(g.id)+'">'+esc(t("reopen"))+'</button>')+items.map(pk=>bohItem(pk, statusBadge("kept"))).join("")+'</div>';
+    }).join("")+'</div>';
+  }
+  return h+'</div>';
+}
+function bohGuestHead(g, right){
+  const sz = [g.topSize&&(t("top")+" "+g.topSize), g.bottomSize&&(t("bottom")+" "+g.bottomSize), g.shoeSize&&(t("shoe")+" "+g.shoeSize)].filter(Boolean).join(" · ");
+  return '<div class="qhead"><div style="flex:1;min-width:0"><div class="n">'+esc(g.name)+'</div><div class="small muted">'+esc([g.role,sz].filter(Boolean).join(" — "))+'</div>'+(g.notes?'<div class="small" style="margin-top:4px">'+esc(g.notes)+'</div>':'')+'<div style="margin-top:6px">'+right+'</div></div>'+
+    '<label class="fl" style="width:84px">'+esc(t("rack"))+'<input class="input sm rack" id="rack-'+esc(g.id)+'" data-change="rack" data-id="'+esc(g.id)+'" value="'+esc(g.rack||"")+'"></label></div>';
+}
+function bohItem(pk, actions, dim){
+  const p = S.products[pk.sku] || {sku:pk.sku,name:t("unknownProduct"),category:pk.cat};
+  return '<div class="qitem '+(dim?"done":"")+'">'+imgHTML(p)+'<div style="min-width:0"><div class="nm">'+esc(p.name)+'<span class="sz">'+esc(pk.size)+'</span></div><div class="sub">'+esc(p.sku)+' · '+esc(p.color||"")+' · '+esc(t(pk.cat))+'</div></div><div class="row" style="flex-wrap:wrap;justify-content:flex-end">'+actions+'</div></div>';
+}
+
+/* ============ ADMIN ============ */
+function adminHTML(){
+  const c = S.config; const res = reservedMap();
+  const prods = sortedProducts();
+  const missing = prods.filter(p=>!p.imageId).length;
+  let h = '<div class="wrap"><div class="row" style="align-items:flex-end;margin-bottom:22px"><div><div class="eyebrow">'+esc(c.eventName||"")+'</div><h1 style="margin-top:6px">'+esc(t("admin"))+'</h1></div></div><div class="adm">';
+  // Event
+  h += '<section class="sec"><div class="sec-h"><h3>'+esc(t("eventSettings"))+'</h3></div><div class="two"><div style="display:grid;gap:12px">'+
+     '<label class="fl">'+esc(t("eventName"))+'<input class="input" id="cfg-name" data-change="cfgName" value="'+esc(c.eventName||"")+'"></label>'+
+     '<label class="fl">'+esc(t("staffPin"))+'<input class="input" id="cfg-pin" data-change="cfgPin" inputmode="numeric" maxlength="8" value="'+esc(c.pin||"")+'" placeholder="—"></label></div>'+
+     '<div><div class="fl" style="margin-bottom:6px">'+esc(t("defaultAlloc"))+'</div><div class="form-grid" style="grid-template-columns:repeat(3,1fr)">'+
+     CATS.map(k=>'<label class="fl">'+esc(t(k))+'<input class="input" type="number" min="0" id="cfg-a-'+k+'" data-change="cfgAlloc" data-k="'+k+'" value="'+(+c.alloc[k]||0)+'"></label>').join("")+'</div></div></div></section>';
+  // Import
+  h += '<section class="sec"><div class="sec-h"><h3>'+esc(t("importData"))+'</h3><span class="spacer"></span>'+
+     (true?'<button class="btn ghost sm" data-act="tplInv">↓ '+esc(t("dlInvTpl"))+'</button><button class="btn ghost sm" data-act="tplGuest">↓ '+esc(t("dlGuestTpl"))+'</button><button class="btn sm" data-act="exportReport">↓ '+esc(t("exportReport"))+'</button>':'')+'</div>'+
+     '<div class="two">'+importBox("inv")+importBox("guest")+'</div>'+
+     (S.busy?'<div style="margin-top:16px"><div class="small" style="margin-bottom:6px">'+esc(S.busy.label)+' — '+S.busy.done+' / '+S.busy.total+'</div><div class="bar"><i style="width:'+(S.busy.total?Math.round(S.busy.done/S.busy.total*100):0)+'%"></i></div></div>':'')+
+     '</section>';
+  // Images
+  h += '<section class="sec"><div class="sec-h"><h3>'+esc(t("images"))+'</h3><span class="badge '+(missing?"":"grey")+'">'+missing+' '+esc(t("missingImages"))+'</span></div>'+
+     (S.assets? '<div class="row" style="margin-bottom:14px;flex-wrap:wrap"><button class="btn sm" data-act="fetchNike" '+(S.busy||!missing?"disabled":"")+'>'+esc(t("fetchNike"))+'</button><span class="small muted" style="flex:1;min-width:240px">'+esc(t("fetchNikeHelp"))+'</span></div><p class="small muted" style="margin-bottom:12px">'+esc(t("imagesHelp"))+'</p><div class="drop" id="bulk-drop">'+esc(t("dropHere"))+' <label class="link" style="cursor:pointer">'+esc(t("browse"))+'<input type="file" accept="image/*" multiple class="hidden" data-change="bulkFiles"></label></div>'
+              : '<p class="small muted">'+esc(t("noAssets"))+'</p>')+'</section>';
+  // Inventory table
+  let fp = prods; if(S.admQ){ const q=norm(S.admQ); fp=fp.filter(p=>norm(p.name+" "+p.sku+" "+p.color).includes(q)); } if(S.admMissing) fp=fp.filter(p=>!p.imageId);
+  h += '<section class="sec"><div class="sec-h"><h3>'+esc(t("inventory"))+'</h3><span class="muted small">'+prods.length+' SKUs · '+prods.reduce((a,p)=>a+totalStock(p),0)+' units</span><span class="spacer"></span>'+
+     '<label class="row small"><input type="checkbox" data-change="admMissing" '+(S.admMissing?"checked":"")+'> '+esc(t("onlyMissing"))+'</label><input id="q-adm" data-live="1" class="input sm" style="width:200px" placeholder="'+esc(t("search"))+'" value="'+esc(S.admQ)+'"></div>';
+  if(!prods.length) h += '<div class="empty small">'+esc(t("noProducts"))+'</div>';
+  else h += '<div class="tblwrap" data-scroll="inv"><table class="tbl"><thead><tr><th></th><th>'+t("sku")+'</th><th>'+t("product")+'</th><th>'+t("category")+'</th><th>'+t("sizes")+' ('+t("stock")+' / '+t("reserved")+')</th><th></th></tr></thead><tbody>'+
+     fp.map(p=>'<tr><td style="width:62px"><button data-act="editProduct" data-id="'+esc(p.id)+'" style="display:block;width:48px">'+imgHTML(p)+'</button></td><td style="white-space:nowrap">'+esc(p.sku)+'</td><td><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.color||"")+'</div></td><td>'+esc(t(p.category))+'</td><td class="small">'+
+       Object.keys(p.sizes||{}).sort(sizeSort).map(s=>{const r=res[p.id+"|"+s]||0; return '<span style="display:inline-block;margin:0 10px 2px 0;white-space:nowrap"><b>'+esc(s)+'</b> '+(p.sizes[s]||0)+(r?' / <span class="muted">'+r+'</span>':'')+'</span>';}).join("")+
+       '</td><td style="white-space:nowrap"><button class="btn ghost xs" data-act="editProduct" data-id="'+esc(p.id)+'">'+esc(t("edit"))+'</button></td></tr>').join("")+'</tbody></table></div>';
+  h += '</section>';
+  // Guests table
+  const gs = sortedGuests();
+  h += '<section class="sec"><div class="sec-h"><h3>'+esc(t("guestList"))+'</h3><span class="muted small">'+gs.length+'</span><span class="spacer"></span><button class="btn ghost sm" data-act="addGuest">+ '+esc(t("addGuest"))+'</button></div>';
+  if(!gs.length) h += '<div class="empty small">'+esc(t("noGuests"))+'</div>';
+  else h += '<div class="tblwrap" data-scroll="gst"><table class="tbl"><thead><tr><th>'+t("name")+'</th><th>'+t("top")+'</th><th>'+t("bottom")+'</th><th>'+t("shoe")+'</th>'+CATS.map(k=>'<th title="'+esc(t(k))+'">'+esc(t(k).slice(0,4))+'.</th>').join("")+'<th>'+t("status")+'</th><th></th></tr></thead><tbody>'+
+     gs.map(g=>{ const a=allocOf(g), u=usedOf(g.id); return '<tr><td><b>'+esc(g.name)+'</b><div class="muted">'+esc(g.role||"")+'</div></td>'+
+       ['topSize','bottomSize','shoeSize'].map(f=>'<td><input class="input sm" style="width:58px" id="g-'+esc(g.id)+'-'+f+'" data-change="gField" data-id="'+esc(g.id)+'" data-f="'+f+'" value="'+esc(g[f]||"")+'"></td>').join("")+
+       CATS.map(k=>'<td><input class="input sm allocin" type="number" min="0" id="g-'+esc(g.id)+'-a-'+k+'" data-change="gAlloc" data-id="'+esc(g.id)+'" data-k="'+k+'" value="'+a[k]+'" title="'+u[k]+' used"></td>').join("")+
+       '<td><span class="badge">'+esc(t(guestStage(g)))+'</span></td><td style="white-space:nowrap"><button class="btn ghost xs" data-act="editGuest" data-id="'+esc(g.id)+'">'+esc(t("edit"))+'</button> <button class="link" data-act="resetGuest" data-id="'+esc(g.id)+'">'+esc(t("resetLook"))+'</button></td></tr>'; }).join("")+'</tbody></table></div>';
+  h += '</section>';
+  // Danger
+  h += '<section class="sec"><div class="sec-h"><h3>'+esc(t("danger"))+'</h3></div><div class="row" style="flex-wrap:wrap"><button class="btn ghost sm" data-act="clearPicks">'+esc(t("clearPicks"))+'</button><button class="btn ghost sm" data-act="clearAll">'+esc(t("clearAll"))+'</button>'+(S.sb?'<span class="spacer"></span><button class="btn ghost sm" data-act="signOut">'+esc(t("signOut"))+'</button>':'')+'</div></section>';
+  return h+'</div></div>';
+}
+function importBox(kind){
+  const id = kind==="inv"?"imp-inv":"imp-guest";
+  return '<div class="card" style="padding:16px;display:grid;gap:10px"><div class="eyebrow">'+esc(t(kind==="inv"?"inventoryFile":"guestFile"))+'</div>'+
+    '<input type="file" id="'+id+'-file" accept=".xlsx,.xls,.csv" class="small">'+
+    '<div class="row"><select class="input sm" id="'+id+'-mode" style="flex:1"><option value="merge">'+esc(t("mergeUpdate"))+'</option><option value="replace">'+esc(t("replaceAll"))+'</option></select>'+
+    '<button class="btn sm" data-act="import" data-v="'+kind+'" '+(S.busy?"disabled":"")+'>'+esc(t("importBtn"))+'</button></div></div>';
+}
+
+/* ============ Modals ============ */
+function openModal(m){ S.modal=m; renderModal(); }
+function closeModal(){ S.modal=null; renderModal(); }
+function renderModal(){
+  const root = $("#modal-root"); const m = S.modal;
+  if(!m){ root.innerHTML=""; return; }
+  // keep modal content stable while typing
+  if(root.firstChild && root.contains(document.activeElement) && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  let inner="", narrow=false;
+  if(m.type==="product") inner = productModalHTML(m.id);
+  else if(m.type==="confirm"){ narrow=true; inner='<div class="mbody"><h3 style="margin:6px 30px 20px 0">'+esc(m.text)+'</h3><div class="row" style="justify-content:flex-end"><button class="btn ghost sm" data-act="closeModal">'+esc(t("cancel"))+'</button><button class="btn sm" data-act="confirmYes">'+esc(t("confirm"))+'</button></div></div>'; }
+  else if(m.type==="pin"){ narrow=true; inner='<div class="mbody"><h3 style="margin-bottom:14px">'+esc(t("enterPin"))+'</h3><input class="input" id="pin-in" type="password" inputmode="numeric" autocomplete="off" style="font-size:22px;letter-spacing:.3em;text-align:center"><p class="small" id="pin-err" style="height:18px;margin-top:6px"></p><div class="row" style="justify-content:flex-end"><button class="btn ghost sm" data-act="pinCancel">'+esc(t("cancel"))+'</button><button class="btn sm" data-act="pinOk">'+esc(t("unlock"))+'</button></div></div>'; }
+  else if(m.type==="editProduct") inner = editProductHTML(m.id);
+  else if(m.type==="editGuest"){ narrow=true; inner = editGuestHTML(m.id); }
+  else if(m.type==="swap"){ narrow=true; inner = swapHTML(m.id); }
+  else if(m.type==="result"){ narrow=true; inner='<div class="mbody"><h3 style="margin-bottom:12px">'+esc(m.title)+'</h3><div class="small" style="white-space:pre-wrap;max-height:50vh;overflow:auto">'+esc(m.text)+'</div><div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn sm" data-act="closeModal">OK</button></div></div>'; }
+  if(!inner){ S.modal=null; root.innerHTML=""; return; }
+  root.innerHTML = '<div class="scrim" data-act="scrim"><div class="modal '+(narrow?"narrow":"")+'" role="dialog"><button class="x" data-act="closeModal" aria-label="Close">×</button>'+inner+'</div></div>';
+  if(m.type==="pin") setTimeout(()=>{ const i=$("#pin-in"); i&&i.focus(); },30);
+}
+function editProductHTML(id){
+  const p = S.products[id]; if(!p) return "";
+  return '<div class="pd"><div><div id="img-drop" class="drop" style="border:0;padding:0;border-radius:0">'+imgHTML(p,true)+'</div>'+
+    '<div style="padding:14px 18px;display:grid;gap:8px">'+
+      (S.assets?'<p class="small muted">'+esc(t("pasteHint"))+'</p><div class="row" style="flex-wrap:wrap"><label class="btn sm" style="cursor:pointer">'+esc(t("uploadImage"))+'<input type="file" accept="image/*" class="hidden" data-change="prodFile" data-id="'+esc(p.id)+'"></label>'+(p.imageId?'<button class="btn ghost sm" data-act="removeImage" data-id="'+esc(p.id)+'">'+esc(t("removeImage"))+'</button>':''):'<p class="small muted">'+esc(t("noAssets"))+'</p><div class="row">')+
+      '<a class="link" target="_blank" rel="noopener" href="https://www.nike.com/w?q='+encodeURIComponent(p.sku)+'">'+esc(t("findNike"))+' ↗</a></div></div></div>'+
+    '<div class="info"><div class="eyebrow">'+esc(p.sku)+'</div>'+
+    '<label class="fl">'+esc(t("product"))+'<input class="input" id="ep-name" value="'+esc(p.name)+'"></label>'+
+    '<label class="fl">'+esc(t("color"))+'<input class="input" id="ep-color" value="'+esc(p.color||"")+'"></label>'+
+    '<label class="fl">'+esc(t("category"))+'<select class="input" id="ep-cat">'+CATS.map(c=>'<option value="'+c+'" '+(p.category===c?"selected":"")+'>'+esc(t(c))+'</option>').join("")+'</select></label>'+
+    '<label class="fl">'+esc(t("sizesStock"))+'<textarea class="input" id="ep-sizes">'+esc(sizesText(p.sizes))+'</textarea></label>'+
+    '<div class="row" style="margin-top:auto"><button class="link" data-act="deleteProduct" data-id="'+esc(p.id)+'">'+esc(t("del"))+'</button><span class="spacer"></span><button class="btn sm" data-act="saveProduct" data-id="'+esc(p.id)+'">'+esc(t("save"))+'</button></div></div></div>';
+}
+function editGuestHTML(id){
+  const g = id ? S.guests[id] : {name:"",role:"",topSize:"",bottomSize:"",shoeSize:"",notes:""};
+  if(!g) return "";
+  return '<div class="mbody" style="display:grid;gap:12px"><h3>'+esc(id?g.name:t("addGuest"))+'</h3>'+
+    '<label class="fl">'+esc(t("name"))+'<input class="input" id="eg-name" value="'+esc(g.name)+'"></label>'+
+    '<label class="fl">'+esc(t("role"))+'<input class="input" id="eg-role" value="'+esc(g.role||"")+'"></label>'+
+    '<div class="form-grid" style="grid-template-columns:repeat(3,1fr)"><label class="fl">'+esc(t("top"))+'<input class="input" id="eg-top" value="'+esc(g.topSize||"")+'"></label><label class="fl">'+esc(t("bottom"))+'<input class="input" id="eg-bottom" value="'+esc(g.bottomSize||"")+'"></label><label class="fl">'+esc(t("shoe"))+'<input class="input" id="eg-shoe" value="'+esc(g.shoeSize||"")+'"></label></div>'+
+    '<label class="fl">'+esc(t("notes"))+'<textarea class="input" id="eg-notes">'+esc(g.notes||"")+'</textarea></label>'+
+    '<div class="row">'+(id?'<button class="link" data-act="deleteGuest" data-id="'+esc(id)+'">'+esc(t("del"))+'</button>':'')+'<span class="spacer"></span><button class="btn sm" data-act="saveGuest" data-id="'+esc(id||"")+'">'+esc(t("save"))+'</button></div></div>';
+}
+function swapHTML(pid){
+  const pk = S.picks[pid]; if(!pk) return ""; const p = S.products[pk.sku]; if(!p) return "";
+  const res = reservedMap(); const sizes = Object.keys(p.sizes||{}).sort(sizeSort).filter(s=>s!==pk.size);
+  return '<div class="mbody"><h3 style="margin-bottom:4px">'+esc(t("changeSize"))+'</h3><p class="small muted" style="margin-bottom:14px">'+esc(p.name)+' · '+esc(pk.size)+'</p><div class="sizes">'+
+    sizes.map(s=>{const av=availOf(p,s,res); return '<button class="size" data-act="doSwap" data-id="'+esc(pid)+'" data-v="'+esc(s)+'" '+(av<=0?"disabled":"")+'>'+esc(s)+'<small>'+av+' '+esc(t("left"))+'</small></button>';}).join("")+
+    '</div>'+(sizes.every(s=>availOf(p,s,res)<=0)?'<p class="small muted" style="margin-top:10px">'+esc(t("stockOut"))+'</p>':'')+'</div>';
+}
+let confirmCb=null;
+function ask(text, cb){ confirmCb=cb; openModal({type:"confirm",text}); }
+let toastT=null;
+function toast(msg){ const el=$("#toast"); el.textContent=msg; el.classList.remove("hidden"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.add("hidden"),2600); }
+
+/* ============ Actions ============ */
+const pinPending = {to:null};
+function go(view){
+  const needsPin = (view==="boh"||view==="admin") && S.config.pin && !S.unlocked;
+  if(needsPin){ pinPending.to=view; openModal({type:"pin"}); return false; }
+  S.view=view; render(); return true;
+}
+function routeFromHash(){
+  const h = (location.hash||"").replace("#","");
+  const v = h==="back-of-house"?"boh":h==="admin"?"admin":"guest";
+  if(v!==S.view){ if(!go(v)){ /* stay */ history.replaceState(null,"",S.view==="boh"?"#back-of-house":"#"+S.view); } }
+  else render();
+}
+window.addEventListener("hashchange", routeFromHash);
+
+async function setPick(id, status){
+  const pk = S.picks[id]; if(!pk) return;
+  const patch = {status, updatedAt:now()};
+  if(status==="pulled") patch.pulledAt=now();
+  if(status==="requested" && !pk.requestedAt) patch.requestedAt=now();
+  if(status==="kept"||status==="returned") patch.decidedAt=now();
+  await w(()=>kDoc(id).update(patch),"pick");
+}
+async function addPick(){
+  const m=S.modal; const p=S.products[m.id]; const g=S.guests[S.activeGuest]; if(!p||!g||!m.size) return;
+  const res=reservedMap(); if(availOf(p,m.size,res)<=0){ toast(t("soldOut")); return; }
+  const alloc=allocOf(g), used=usedOf(g.id); if(used[p.category]>=alloc[p.category]){ toast(t("allocFull",{cat:t(p.category).toLowerCase()})); return; }
+  const id = rid();
+  const doc = {guestId:g.id, sku:p.id, size:m.size, cat:p.category, status:"draft", createdAt:now(), updatedAt:now()};
+  S.picks[id] = {id, ...doc}; // optimistic
+  closeModal(); toast(t("added")); render();
+  await w(()=>kDoc(id).set(doc),"pick");
+}
+
+const handlers = {
+  lang: el=>{ LANG=el.dataset.v; try{localStorage.setItem("ss_lang",LANG);}catch(e){} document.documentElement.lang=LANG; render(); },
+  cat: el=>{ S.cat=el.dataset.v; render(); },
+  pickGuest: el=>{ S.activeGuest=el.dataset.id; try{localStorage.setItem("ss_active",S.activeGuest);}catch(e){} S.cat="all"; S.q=""; window.scrollTo(0,0); render(); },
+  switchGuest: ()=>{ S.activeGuest=null; S.gq=""; S.lbOpen=false; try{localStorage.removeItem("ss_active");}catch(e){} render(); },
+  toggleLb: ()=>{ S.lbOpen=!S.lbOpen; render(); },
+  openProduct: el=>{ const p=S.products[el.dataset.id]; const g=S.guests[S.activeGuest]; const rec=sizeForCat(g,p.category); const res=reservedMap();
+    let size = Object.keys(p.sizes||{}).find(s=>rec && norm(s)===norm(rec) && availOf(p,s,res)>0) || null;
+    const avs = Object.keys(p.sizes||{}).filter(s=>availOf(p,s,res)>0); if(!size && avs.length===1) size=avs[0];
+    openModal({type:"product",id:p.id,size}); },
+  pickSize: el=>{ S.modal.size=el.dataset.v; renderModal(); },
+  addPick: ()=>addPick(),
+  removePick: async el=>{ const id=el.dataset.id; delete S.picks[id]; render(); await w(()=>kDoc(id).delete(),"pick"); },
+  setPick: el=>setPick(el.dataset.id, el.dataset.v),
+  submitLb: async ()=>{ const g=S.guests[S.activeGuest]; const ds=picksOf(g.id).filter(p=>p.status==="draft"); const ts=now();
+    for(const p of ds){ await w(()=>kDoc(p.id).update({status:"requested",requestedAt:ts,updatedAt:ts}),"pick"); }
+    toast(t("sent")); },
+  finishGuest: ()=>ask(t("finishQ"), async ()=>{ const g=S.guests[S.activeGuest]; await w(()=>gDoc(g.id).update({completedAt:now()}),"guest"); toast(t("finished")); handlers.switchGuest(); }),
+  finishGuestStaff: el=>w(()=>gDoc(el.dataset.id).update({completedAt:now()}),"guest"),
+  reopenGuest: el=>w(()=>gDoc(el.dataset.id).update({completedAt:null}),"guest"),
+  bohTab: el=>{ S.bohTab=el.dataset.v; render(); },
+  pullAll: async el=>{ const ps=picksOf(el.dataset.id).filter(p=>p.status==="requested"); for(const p of ps) await setPick(p.id,"pulled"); },
+  pullGroup: async el=>{ const [sku,size]=el.dataset.v.split("|"); const ps=Object.values(S.picks).filter(p=>p.status==="requested"&&p.sku===sku&&p.size===size); for(const p of ps) await setPick(p.id,"pulled"); },
+  swapSize: el=>openModal({type:"swap",id:el.dataset.id}),
+  doSwap: async el=>{ const id=el.dataset.id, size=el.dataset.v; closeModal(); await w(()=>kDoc(id).update({size,status:"requested",requestedAt:now(),updatedAt:now()}),"pick"); },
+  closeModal: ()=>closeModal(),
+  scrim: (el,ev)=>{ if(ev.target===el) closeModal(); },
+  confirmYes: ()=>{ const cb=confirmCb; confirmCb=null; closeModal(); cb&&cb(); },
+  pinOk: ()=>{ const v=$("#pin-in").value; if(v===String(S.config.pin)){ S.unlocked=true; try{sessionStorage.setItem("ss_unlocked","1");}catch(e){} const to=pinPending.to; closeModal(); S.view=to; location.hash = to==="boh"?"back-of-house":to; render(); } else { $("#pin-err").textContent=t("wrongPin"); $("#pin-in").value=""; } },
+  pinCancel: ()=>{ closeModal(); history.replaceState(null,"",S.view==="boh"?"#back-of-house":"#"+S.view); render(); },
+  editProduct: el=>openModal({type:"editProduct",id:el.dataset.id}),
+  saveProduct: async el=>{ const id=el.dataset.id; const patch={name:$("#ep-name").value.trim(),color:$("#ep-color").value.trim(),category:$("#ep-cat").value,sizes:parseSizesText($("#ep-sizes").value)};
+    document.activeElement && document.activeElement.blur(); closeModal();
+    const doc={...S.products[id], ...patch, updatedAt:now()}; delete doc.id; delete doc._localUrl; await w(()=>pDoc(id).set(doc),"product"); toast(t("saved")); },
+  deleteProduct: el=>ask(t("deleteQ"), ()=>w(()=>pDoc(el.dataset.id).delete(),"product")),
+  removeImage: async el=>{ const id=el.dataset.id; await w(()=>pDoc(id).update({imageId:null}),"product"); render(); },
+  addGuest: ()=>openModal({type:"editGuest",id:null}),
+  editGuest: el=>openModal({type:"editGuest",id:el.dataset.id}),
+  saveGuest: async el=>{ const id=el.dataset.id||rid(); const name=$("#eg-name").value.trim(); if(!name) return;
+    const base = S.guests[id] ? {...S.guests[id]} : {alloc:{},createdAt:now()}; delete base.id;
+    const doc={...base,name,role:$("#eg-role").value.trim(),topSize:$("#eg-top").value.trim(),bottomSize:$("#eg-bottom").value.trim(),shoeSize:$("#eg-shoe").value.trim(),notes:$("#eg-notes").value.trim()};
+    document.activeElement && document.activeElement.blur(); closeModal(); await w(()=>gDoc(id).set(doc),"guest"); toast(t("saved")); },
+  deleteGuest: el=>ask(t("deleteQ"), async ()=>{ const id=el.dataset.id; for(const p of picksOf(id)) await w(()=>kDoc(p.id).delete()); await w(()=>gDoc(id).delete(),"guest"); }),
+  resetGuest: el=>ask(t("resetLook")+"?", async ()=>{ const id=el.dataset.id; for(const p of picksOf(id)) await w(()=>kDoc(p.id).delete()); await w(()=>gDoc(id).update({completedAt:null,rack:""}),"guest"); }),
+  clearPicks: ()=>ask(t("clearPicksQ"), async ()=>{ const ps=Object.keys(S.picks); S.busy={label:t("clearPicks"),done:0,total:ps.length}; render();
+    for(const id of ps){ await w(()=>kDoc(id).delete()); S.busy.done++; render(); }
+    for(const g of Object.values(S.guests)) if(g.completedAt||g.rack) await w(()=>gDoc(g.id).update({completedAt:null,rack:""}));
+    S.busy=null; render(); }),
+  clearAll: ()=>ask(t("clearAllQ"), async ()=>{ const all=[...Object.keys(S.picks).map(i=>kDoc(i)),...Object.keys(S.guests).map(i=>gDoc(i)),...Object.keys(S.products).map(i=>pDoc(i))];
+    S.busy={label:t("clearAll"),done:0,total:all.length}; render(); for(const r of all){ await w(()=>r.delete()); S.busy.done++; render(); } S.busy=null; render(); }),
+  import: el=>doImport(el.dataset.v),
+  fetchNike: ()=>fetchNikeImages(),
+  signOut: async ()=>{ try{ await S.sb.auth.signOut(); }catch(e){} location.reload(); },
+  tplInv: ()=>downloadTemplate("inv"),
+  tplGuest: ()=>downloadTemplate("guest"),
+  exportReport: ()=>exportReport(),
+};
+document.addEventListener("click", ev=>{
+  const el = ev.target.closest("[data-act]"); if(!el) return;
+  const fn = handlers[el.dataset.act]; if(!fn) return;
+  if(el.dataset.act!=="scrim") ev.preventDefault();
+  Promise.resolve(fn(el, ev)).catch(e=>console.warn(e));
+});
+document.addEventListener("submit", async ev=>{
+  if(ev.target.id!=="login-form") return; ev.preventDefault();
+  const {error} = await S.sb.auth.signInWithPassword({email:$("#li-email").value.trim(), password:$("#li-pass").value});
+  if(error){ $("#li-err").textContent=t("badLogin"); return; }
+  document.activeElement && document.activeElement.blur();
+  S.needLogin=false; startData();
+});
+document.addEventListener("input", ev=>{
+  const el=ev.target;
+  if(el.id==="q-guest"){ S.q=el.value; render(); }
+  if(el.id==="q-gname"){ S.gq=el.value; render(); }
+  if(el.id==="q-adm"){ S.admQ=el.value; render(); }
+});
+document.addEventListener("keydown", ev=>{
+  if(ev.key==="Escape" && S.modal) closeModal();
+  if(ev.key==="Enter" && ev.target.id==="pin-in") handlers.pinOk();
+});
+document.addEventListener("change", async ev=>{
+  const el=ev.target; const k=el.dataset.change; if(!k) return;
+  const id=el.dataset.id;
+  if(k==="rack") await w(()=>gDoc(id).update({rack:el.value.trim()}),"rack");
+  if(k==="cfgName") await saveCfg({eventName:el.value.trim()});
+  if(k==="cfgPin") await saveCfg({pin:el.value.trim()});
+  if(k==="cfgAlloc"){ const a={...S.config.alloc}; a[el.dataset.k]=Math.max(0,parseInt(el.value,10)||0); await saveCfg({alloc:a}); }
+  if(k==="gField") await w(()=>gDoc(id).update({[el.dataset.f]:el.value.trim()}),"guest");
+  if(k==="gAlloc"){ const v=Math.max(0,parseInt(el.value,10)||0); await w(()=>gDoc(id).update({alloc:{[el.dataset.k]:v}}),"guest"); }
+  if(k==="admMissing"){ S.admMissing=el.checked; render(); }
+  if(k==="bulkFiles") await bulkImages([...el.files]);
+  if(k==="prodFile" && el.files[0]) await setProductImage(id, el.files[0]);
+});
+async function saveCfg(patch){ S.config={...S.config,...patch}; const c={...S.config}; await w(()=>cfgDoc().set(c),"settings"); render(); }
+
+/* Drag & drop + paste for images */
+document.addEventListener("dragover", ev=>{ const d=ev.target.closest&&ev.target.closest("#bulk-drop,#img-drop"); if(d){ ev.preventDefault(); d.classList.add("over"); } });
+document.addEventListener("dragleave", ev=>{ const d=ev.target.closest&&ev.target.closest("#bulk-drop,#img-drop"); if(d) d.classList.remove("over"); });
+document.addEventListener("drop", async ev=>{
+  const d=ev.target.closest&&ev.target.closest("#bulk-drop,#img-drop"); if(!d) return; ev.preventDefault(); d.classList.remove("over");
+  const files=[...(ev.dataTransfer.files||[])].filter(f=>/^image\//.test(f.type));
+  if(d.id==="bulk-drop") await bulkImages(files);
+  else if(files[0] && S.modal && S.modal.type==="editProduct") await setProductImage(S.modal.id, files[0]);
+});
+document.addEventListener("paste", async ev=>{
+  if(!(S.modal && S.modal.type==="editProduct")) return;
+  if(/INPUT|TEXTAREA/.test((document.activeElement||{}).tagName||"")) return;
+  const items=[...(ev.clipboardData&&ev.clipboardData.items||[])]; const it=items.find(i=>i.type&&i.type.startsWith("image/"));
+  if(it){ ev.preventDefault(); await setProductImage(S.modal.id, it.getAsFile()); }
+});
+
+async function prepImage(file){
+  try{
+    const bmp = await createImageBitmap(file);
+    const max=1000, sc=Math.min(1,max/Math.max(bmp.width,bmp.height));
+    const c=document.createElement("canvas"); c.width=Math.round(bmp.width*sc); c.height=Math.round(bmp.height*sc);
+    const x=c.getContext("2d"); x.fillStyle="#f5f5f5"; x.fillRect(0,0,c.width,c.height); x.drawImage(bmp,0,0,c.width,c.height);
+    return await new Promise(r=>c.toBlob(b=>r(b||file),"image/jpeg",0.88));
+  }catch(e){ return file; }
+}
+async function setProductImage(id, file){
+  if(!S.assets){ toast(t("noAssets")); return; }
+  toast(t("importing")+"…");
+  try{
+    const blob = await prepImage(file);
+    const a = await S.assets.upload(blob);
+    await w(()=>pDoc(id).update({imageId:a.id}),"image");
+    toast(t("saved"));
+  }catch(e){ toast("Image: "+(e.message||e.code||"error")); }
+}
+async function bulkImages(files){
+  if(!S.assets){ toast(t("noAssets")); return; }
+  const prods = Object.values(S.products);
+  const keyed = prods.map(p=>({p,k:skuKey(p.sku)})).sort((a,b)=>b.k.length-a.k.length);
+  let ok=0; const miss=[];
+  S.busy={label:t("images"),done:0,total:files.length}; render();
+  for(const f of files){
+    const base = skuKey(f.name.replace(/\.[^.]+$/,""));
+    const hit = keyed.find(x=>x.k && (base===x.k || base.startsWith(x.k)));
+    if(hit){ try{ const blob=await prepImage(f); const a=await S.assets.upload(blob); await w(()=>pDoc(hit.p.id).update({imageId:a.id})); ok++; }catch(e){ miss.push(f.name); } }
+    else miss.push(f.name);
+    S.busy.done++; render();
+  }
+  S.busy=null; render();
+  openModal({type:"result",title:t("images"),text:ok+" "+t("matched")+(miss.length?"\n"+miss.length+" "+t("unmatched")+":\n"+miss.join("\n"):"")});
+}
+
+async function fetchNikeImages(only){
+  if(!S.assets){ toast(t("noAssets")); return; }
+  const list = (only||Object.values(S.products).filter(p=>!p.imageId));
+  if(!list.length) return;
+  let ok=0; const miss=[];
+  S.busy={label:t("fetchNike"),done:0,total:list.length}; render();
+  for(const p of list){
+    try{
+      const r = await fetch("/api/nike-image?sku="+encodeURIComponent(p.sku));
+      if(!r.ok) throw new Error(r.status);
+      const blob = await r.blob();
+      const prepped = await prepImage(blob);
+      const a = await S.assets.upload(prepped);
+      await w(()=>pDoc(p.id).update({imageId:a.id}));
+      ok++;
+    }catch(e){ miss.push(p.sku); }
+    S.busy.done++; render();
+  }
+  S.busy=null; render();
+  openModal({type:"result",title:t("fetchNike"),text:ok+" "+t("found")+(miss.length?"\n"+miss.length+" "+t("notFound")+":\n"+miss.join("\n"):"")});
+}
+/* ============ Excel import / export ============ */
+const INV_FIELDS = {
+  sku:["sku","style","stylecolor","stylecolour","stylecode","codigo","code","articulo","item","productcode","material","modelo","stylenumber"],
+  name:["name","productname","product","description","descripcion","nombre","producto","itemname","stylename"],
+  category:["category","categoria","type","tipo","division","productcategory","department"],
+  color:["color","colorway","colour","colordescription"],
+  size:["size","talla","tamano"],
+  qty:["qty","quantity","cantidad","units","unidades","stock","inventory","inventario","onhand","pcs","piezas","cant"],
+};
+const GUEST_FIELDS = {
+  name:["name","nombre","guest","guestname","talent","talento","fullname","invitado","nombrecompleto"],
+  role:["role","rol","team","equipo","company","empresa","title","sport","deporte","category","categoria"],
+  topSize:["topsize","tallatop","tallaplayera","tallasuperior","shirtsize","tallaarriba","top","tallatops"],
+  bottomSize:["bottomsize","tallabottom","tallapantalon","tallainferior","pantsize","bottom","tallabottoms"],
+  shoeSize:["shoesize","footwearsize","tallacalzado","tallatenis","tallazapato","shoe","calzadotalla","sneakersize"],
+  notes:["notes","notas","comments","comentarios","note","nota"],
+  footwear:["footwear","calzado","shoes","tenis","footwearallocation","footwearqty"],
+  tops:["tops","topsallocation","playeras","topsqty"],
+  bottoms:["bottoms","bottomsallocation","pantalones","bottomsqty"],
+  jackets:["jackets","chamarras","jacketsallocation","jacketsqty","chaquetas"],
+  hoodies:["hoodies","sudaderas","hoodiesallocation","hoodiesqty"],
+  accessories:["accessories","accesorios","accessoriesallocation","accessoriesqty"],
+};
+function mapHeaders(headers, fields){
+  const map={}; const nh=headers.map(norm);
+  for(const f in fields){ const i = nh.findIndex(h=>fields[f].includes(h)); if(i>-1) map[f]=headers[i]; }
+  return map;
+}
+async function readSheet(file){
+  if(!window.XLSX) throw new Error("Excel library didn't load");
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf,{type:"array"});
+  // pick first sheet that has rows
+  for(const n of wb.SheetNames){ const rows = XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:"",raw:false}); if(rows.length) return rows; }
+  return [];
+}
+async function doImport(kind){
+  const id = kind==="inv"?"imp-inv":"imp-guest";
+  const file = $("#"+id+"-file").files[0]; const mode=$("#"+id+"-mode").value;
+  if(!file){ toast(t(kind==="inv"?"inventoryFile":"guestFile")+"?"); return; }
+  let rows; try{ rows = await readSheet(file); }catch(e){ openModal({type:"result",title:"Error",text:e.message}); return; }
+  if(!rows.length){ openModal({type:"result",title:"Error",text:"Empty file"}); return; }
+  const headers = Object.keys(rows[0]);
+  if(kind==="inv") await importInventory(rows, headers, mode); else await importGuests(rows, headers, mode);
+}
+async function importInventory(rows, headers, mode){
+  const m = mapHeaders(headers, INV_FIELDS);
+  if(!m.sku){ openModal({type:"result",title:"Error",text:"No SKU column found. Columns: "+headers.join(", ")}); return; }
+  const agg={}; let skipped=0;
+  rows.forEach(r=>{
+    const sku=String(r[m.sku]||"").trim(); if(!sku){ skipped++; return; }
+    const id=docId(sku);
+    const a = agg[id] || (agg[id]={sku, name:"", color:"", category:"", sizes:{}});
+    if(m.name && r[m.name]) a.name = String(r[m.name]).trim();
+    if(m.color && r[m.color]) a.color = String(r[m.color]).trim();
+    if(m.category && r[m.category]) a.category = normCat(r[m.category]);
+    const size = m.size ? String(r[m.size]||"").trim() : ""; const sz = size || "OS";
+    const q = m.qty ? parseInt(String(r[m.qty]).replace(/[^0-9-]/g,""),10) : 1;
+    a.sizes[sz] = (a.sizes[sz]||0) + (isNaN(q)?0:Math.max(0,q));
+  });
+  const ids = Object.keys(agg);
+  const toDelete = mode==="replace" ? Object.keys(S.products).filter(i=>!agg[i]) : [];
+  S.busy={label:t("importing"),done:0,total:ids.length+toDelete.length}; render();
+  for(const id of ids){
+    const a=agg[id], prev=S.products[id]||{};
+    const doc={sku:a.sku, name:a.name||prev.name||a.sku, color:a.color||prev.color||"", category:a.category||prev.category||normCat(a.name), sizes:a.sizes, imageId:prev.imageId||null, updatedAt:now()};
+    await w(()=>pDoc(id).set(doc),"import"); S.busy.done++; if(S.busy.done%5===0) render();
+  }
+  for(const id of toDelete){ await w(()=>pDoc(id).delete()); S.busy.done++; }
+  S.busy=null; render();
+  const newOnes = ids.map(i=>S.products[i]||{id:i,sku:agg[i].sku}).filter(p=>!p.imageId);
+  if(S.sb && newOnes.length){ await fetchNikeImages(newOnes.map(p=>({...p,id:p.id||docId(p.sku)}))); return; }
+  openModal({type:"result",title:t("imported"),text:ids.length+" SKUs · "+rows.length+" rows"+(skipped?" · "+skipped+" "+t("rowsSkipped"):"")+(toDelete.length?"\n− "+toDelete.length+" SKUs":"")+"\n\nColumns used: "+Object.entries(m).map(([k,v])=>k+" ← "+v).join(", ")});
+}
+async function importGuests(rows, headers, mode){
+  const m = mapHeaders(headers, GUEST_FIELDS);
+  if(!m.name){ openModal({type:"result",title:"Error",text:"No Name column found. Columns: "+headers.join(", ")}); return; }
+  const byName={}; Object.values(S.guests).forEach(g=>byName[norm(g.name)]=g.id);
+  const seen=new Set(); let skipped=0; const work=[];
+  rows.forEach(r=>{
+    const name=String(r[m.name]||"").trim(); if(!name){ skipped++; return; }
+    const id = byName[norm(name)] || rid(); seen.add(id);
+    const prev = S.guests[id] ? {...S.guests[id]} : {createdAt:now()}; delete prev.id;
+    const alloc = {...(prev.alloc||{})};
+    CATS.forEach(c=>{ if(m[c]!=null && String(r[m[c]]).trim()!==""){ const v=parseInt(r[m[c]],10); if(!isNaN(v)) alloc[c]=Math.max(0,v); } });
+    const doc={...prev,name,alloc};
+    ["role","topSize","bottomSize","shoeSize","notes"].forEach(f=>{ if(m[f]) doc[f]=String(r[m[f]]||"").trim(); else if(doc[f]==null) doc[f]=""; });
+    work.push([id,doc]);
+  });
+  const toDelete = mode==="replace" ? Object.keys(S.guests).filter(i=>!seen.has(i)) : [];
+  S.busy={label:t("importing"),done:0,total:work.length+toDelete.length}; render();
+  for(const [id,doc] of work){ await w(()=>gDoc(id).set(doc),"import"); S.busy.done++; if(S.busy.done%5===0) render(); }
+  for(const id of toDelete){ for(const p of picksOf(id)) await w(()=>kDoc(p.id).delete()); await w(()=>gDoc(id).delete()); S.busy.done++; }
+  S.busy=null; render();
+  openModal({type:"result",title:t("imported"),text:work.length+" "+t("guestsLbl").toLowerCase()+(skipped?" · "+skipped+" "+t("rowsSkipped"):"")+(toDelete.length?"\n− "+toDelete.length:"")+"\n\nColumns used: "+Object.entries(m).map(([k,v])=>k+" ← "+v).join(", ")});
+}
+async function saveWorkbook(wb, filename){
+  const out = XLSX.write(wb,{bookType:"xlsx",type:"array"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})); a.download=filename;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000);
+}
+function sheet(aoa, widths){ const ws=XLSX.utils.aoa_to_sheet(aoa); if(widths) ws["!cols"]=widths.map(w=>({wch:w})); return ws; }
+async function downloadTemplate(kind){
+  const wb = XLSX.utils.book_new();
+  if(kind==="inv"){
+    XLSX.utils.book_append_sheet(wb, sheet([
+      ["SKU","Product Name","Category","Color","Size","Quantity"],
+      ["DD1391-100","Nike Dunk Low Retro","Footwear","White/Black","9",2],
+      ["DD1391-100","Nike Dunk Low Retro","Footwear","White/Black","10",3],
+      ["FB7880-010","Nike Tech Fleece Hoodie","Hoodies","Black","M",4],
+      ["FB7880-010","Nike Tech Fleece Hoodie","Hoodies","Black","L",4],
+      ["AR5004-010","Nike Sportswear Club Tee","Tops","Black","L",6],
+      ["BV2671-063","Nike Club Fleece Joggers","Bottoms","Grey","M",3],
+      ["DA2400-010","Nike Windrunner Jacket","Jackets","Black","L",2],
+      ["FB5378-010","Nike Club Cap","Accessories","Black","OS",10],
+    ],[16,32,14,18,8,10]),"Inventory");
+    XLSX.utils.book_append_sheet(wb, sheet([
+      ["How to fill this in"],
+      ["One row per SKU + size. Repeat the SKU on a new row for each size."],
+      ["Category must be one of: Footwear, Tops, Bottoms, Jackets, Hoodies, Accessories (Spanish also works: Calzado, Playeras, Pantalones, Chamarras, Sudaderas, Accesorios)."],
+      ["Use OS for one-size items. Name images by SKU (e.g. DD1391-100.jpg) and drop them in Admin → Product images."],
+    ],[120]),"Instructions");
+    await saveWorkbook(wb,"seeding-inventory-template.xlsx");
+  } else {
+    XLSX.utils.book_append_sheet(wb, sheet([
+      ["Name","Role / Team","Top Size","Bottom Size","Shoe Size","Footwear","Tops","Bottoms","Jackets","Hoodies","Accessories","Notes"],
+      ["Ana López","Athlete","M","M","8",1,2,1,1,1,2,""],
+      ["Carlos Ruiz","Creator","L","L","10",2,2,1,0,1,1,"Prefers neutrals"],
+    ],[24,18,10,12,10,10,8,10,10,10,12,30]),"Guests");
+    XLSX.utils.book_append_sheet(wb, sheet([
+      ["How to fill this in"],
+      ["One row per guest. Allocation columns = how many items they can take home per category. Leave blank to use the event default set in Admin."],
+      ["Sizes are used to pre-select the right size: Top Size for tops, jackets and hoodies; Bottom Size for bottoms; Shoe Size for footwear."],
+    ],[120]),"Instructions");
+    await saveWorkbook(wb,"seeding-guests-template.xlsx");
+  }
+}
+async function exportReport(){
+  const wb = XLSX.utils.book_new();
+  const take=[["Guest","Role","Rack","Category","SKU","Product","Color","Size","Status"]];
+  sortedGuests().forEach(g=>picksOf(g.id).filter(p=>p.status!=="draft").forEach(pk=>{ const p=S.products[pk.sku]||{}; take.push([g.name,g.role||"",g.rack||"",T.en[pk.cat]||pk.cat,p.sku||pk.sku,p.name||"",p.color||"",pk.size,T.en["st_"+pk.status]||pk.status]); }));
+  XLSX.utils.book_append_sheet(wb, sheet(take,[22,16,8,12,14,30,16,8,14]),"Take-home");
+  const kept={}, res=reservedMap(); Object.values(S.picks).forEach(p=>{ if(p.status==="kept"){ const k=p.sku+"|"+p.size; kept[k]=(kept[k]||0)+1; } });
+  const inv=[["SKU","Product","Category","Color","Size","Stock","Reserved","Kept","Available"]];
+  sortedProducts().forEach(p=>Object.keys(p.sizes||{}).sort(sizeSort).forEach(s=>{ const k=p.id+"|"+s; inv.push([p.sku,p.name,T.en[p.category],p.color||"",s,p.sizes[s]||0,res[k]||0,kept[k]||0,availOf(p,s,res)]); }));
+  XLSX.utils.book_append_sheet(wb, sheet(inv,[14,30,12,16,8,8,9,8,10]),"Inventory");
+  const sum=[["Guest","Role","Status",...CATS.map(c=>T.en[c]+" (kept/alloc)")]];
+  sortedGuests().forEach(g=>{ const a=allocOf(g); const ps=picksOf(g.id); sum.push([g.name,g.role||"",T.en[guestStage(g)]||guestStage(g),...CATS.map(c=>ps.filter(p=>p.cat===c&&p.status==="kept").length+" / "+a[c])]); });
+  XLSX.utils.book_append_sheet(wb, sheet(sum,[22,16,12,16,12,14,14,14,18]),"Guests");
+  const d=new Date(); await saveWorkbook(wb, "seeding-report-"+d.toISOString().slice(0,10)+".xlsx");
+}
+
+/* ============ Boot ============ */
+function subscribe(){
+  const timer = setTimeout(()=>{ S.loadTimedOut=true; render(); },10000);
+  const onErr = e => { console.warn("db",e); S.dbFailed=true; S.connected=false; render(); };
+  const coll = (name, target) => S.db.collection(name).onSnapshot(snap=>{
+    const o={}; snap.docs.forEach(d=>{ if(d.exists) o[d.id]={id:d.id,...d.data()}; });
+    S[target]=o; if(!snap.metadata || !snap.metadata.fromCache){ S.connected=true; clearTimeout(timer); }
+    render();
+  }, onErr);
+  coll("products","products"); coll("guests","guests"); coll("picks","picks");
+  cfgDoc().onSnapshot(d=>{ const v=d.exists?d.data():{}; S.config={...DEFAULT_CONFIG,...v,alloc:{...DEFAULT_CONFIG.alloc,...(v.alloc||{})}}; render(); }, onErr);
+}
+/* ============ Supabase adapter (same doc/collection API the app uses) ============ */
+const TABLES = ["products","guests","picks","config"];
+function deepMerge(a,b){ const o=Array.isArray(a)?a.slice():{...(a||{})}; for(const k in b){ const v=b[k]; if(v&&typeof v==="object"&&!Array.isArray(v)&&o[k]&&typeof o[k]==="object"&&!Array.isArray(o[k])) o[k]=deepMerge(o[k],v); else o[k]=v; } return o; }
+function makeSupaDB(sb){
+  const cache = {}; TABLES.forEach(tb=>cache[tb]=new Map());
+  const listeners = {}; TABLES.forEach(tb=>listeners[tb]=new Set());
+  const emit = tb => { const docs=[...cache[tb].entries()].map(([id,d])=>({id,exists:true,data:()=>d,metadata:{fromCache:false,hasPendingWrites:false}}));
+    listeners[tb].forEach(f=>f({docs,size:docs.length,empty:!docs.length,metadata:{fromCache:false},docChanges:()=>[]})); };
+  const fail = e => { const err = new Error(e.message||String(e)); err.code = /rate|429/.test(e.message||"")?"resource_exhausted":"unavailable"; return err; };
+  const loaded = {};
+  async function load(tb){
+    let from=0; const step=1000; const all=[];
+    for(;;){ const {data,error}=await sb.from(tb).select("id,data").range(from,from+step-1); if(error) throw fail(error); all.push(...data); if(data.length<step) break; from+=step; }
+    cache[tb].clear(); all.forEach(r=>cache[tb].set(r.id,r.data||{})); loaded[tb]=true; emit(tb);
+  }
+  const channel = sb.channel("seeding-suite");
+  TABLES.forEach(tb=>channel.on("postgres_changes",{event:"*",schema:"public",table:tb},payload=>{
+    if(payload.eventType==="DELETE"){ cache[tb].delete(payload.old.id); }
+    else cache[tb].set(payload.new.id, payload.new.data||{});
+    emit(tb);
+  }));
+  channel.subscribe(status=>{ if(status==="SUBSCRIBED"){ TABLES.forEach(tb=>{ if(listeners[tb].size) load(tb).catch(console.warn); }); } });
+  // light safety net: refresh every 60s in case a realtime message was missed
+  setInterval(()=>TABLES.forEach(tb=>{ if(listeners[tb].size && document.visibilityState==="visible") load(tb).catch(()=>{}); }),60000);
+  const docRef = path => {
+    const [tb,id] = path.split("/");
+    return { id, path,
+      get: async()=>{ const {data,error}=await sb.from(tb).select("data").eq("id",id).maybeSingle(); if(error) throw fail(error); return {id,exists:!!data,data:()=>data&&data.data}; },
+      set: async d=>{ const body=JSON.parse(JSON.stringify(d)); cache[tb].set(id,body); emit(tb);
+        const {error}=await sb.from(tb).upsert({id,data:body,updated_at:new Date().toISOString()}); if(error) throw fail(error); },
+      update: async d=>{ const {data,error}=await sb.from(tb).select("data").eq("id",id).maybeSingle(); if(error) throw fail(error);
+        if(!data){ const e=new Error("missing"); e.code="invalid_argument"; throw e; }
+        const body=deepMerge(data.data||{},JSON.parse(JSON.stringify(d))); cache[tb].set(id,body); emit(tb);
+        const r=await sb.from(tb).update({data:body,updated_at:new Date().toISOString()}).eq("id",id); if(r.error) throw fail(r.error); },
+      delete: async()=>{ cache[tb].delete(id); emit(tb); const {error}=await sb.from(tb).delete().eq("id",id); if(error) throw fail(error); },
+      onSnapshot:(next,err)=>{ const f=snap=>{ const d=snap.docs.find(x=>x.id===id); next({id,exists:!!d,data:()=>d&&d.data(),metadata:{fromCache:false}}); };
+        listeners[tb].add(f); if(loaded[tb]) emit(tb); else load(tb).catch(e=>err&&err(e)); return ()=>listeners[tb].delete(f); }
+    };
+  };
+  return {
+    doc: docRef,
+    collection: tb => ({ path:tb, doc:id=>docRef(tb+"/"+(id||rid())),
+      onSnapshot:(next,err)=>{ listeners[tb].add(next); if(loaded[tb]) emit(tb); else load(tb).catch(e=>err&&err(e)); return ()=>listeners[tb].delete(next); } })
+  };
+}
+function makeSupaAssets(sb){
+  return { upload: async blob=>{
+    const path = new Date().toISOString().slice(0,10)+"/"+rid()+".jpg";
+    const {error} = await sb.storage.from(BUCKET).upload(path, blob, {contentType:blob.type||"image/jpeg", cacheControl:"31536000", upsert:false});
+    if(error) throw new Error(error.message);
+    return {id:path, url:imageUrl(path)};
+  }};
+}
+function startData(){
+  S.db = makeSupaDB(S.sb); S.assets = makeSupaAssets(S.sb);
+  subscribe(); render();
+  setTimeout(()=>{ if(S.view!=="guest" && S.config.pin && !S.unlocked){ const v=S.view; S.view="guest"; history.replaceState(null,"","#guest"); go(v); } },1500);
+}
+async function boot(){
+  document.documentElement.lang=LANG;
+  const h=(location.hash||"").replace("#","");
+  S.view = h==="back-of-house"?"boh":h==="admin"?"admin":"guest";
+  render();
+  let cfg=null;
+  try{ const r=await fetch("/api/config",{cache:"no-store"}); if(r.ok) cfg=await r.json(); }catch(e){}
+  if(!cfg || !cfg.supabaseUrl || !cfg.supabaseAnonKey || !window.supabase){
+    // Local demo mode: no backend configured (e.g. opened as a file). Data lives in this tab only.
+    S.local=true; S.db=makeMockDB(); S.connected=true;
+    S.assets={upload:async b=>{ const u=URL.createObjectURL(b); return {id:"local:"+u,url:u}; }};
+    subscribe(); return;
+  }
+  S.cfg=cfg;
+  S.sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {auth:{persistSession:true,autoRefreshToken:true}});
+  const {data} = await S.sb.auth.getSession();
+  if(!data || !data.session){ S.needLogin=true; render(); return; }
+  startData();
+}
+boot();
+</script>
+</body>
+</html>

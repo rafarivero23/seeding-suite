@@ -1,0 +1,8 @@
+{
+  "name": "nike-seeding-suite",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Inventory, talent lookbooks and back-of-house fulfillment for a Nike seeding suite.",
+  "engines": { "node": ">=18" }
+}
