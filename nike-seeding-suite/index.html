@@ -115,6 +115,13 @@ html,body{overflow-x:hidden}
 .pcard .nm{font-size:14px;font-weight:500;line-height:1.25}
 .pcard .cl{font-size:13px;color:var(--mute);margin-top:2px}
 .pcard .av{font-size:12px;margin-top:6px;color:var(--ink2)}
+.szs{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+.szs span{font-size:11px;line-height:1;padding:4px 6px;border:1px solid var(--line2);border-radius:3px;color:var(--ink2);font-weight:500}
+.szs span.out{color:var(--line2);text-decoration:line-through;border-color:var(--line)}
+.szs span.me{border-color:var(--black);background:var(--black);color:#fff}
+.szs span.me.out{background:var(--tile2);color:var(--mute);border-color:var(--tile2)}
+.sizesel{width:auto;max-width:260px;margin-left:auto}
+.filters .sizesel + .search{margin-left:0}
 .pcard.out{opacity:.4}
 .pcard .inlb{position:absolute;top:8px;right:8px}
 .pcard:hover .ph{background:var(--tile2)}
@@ -239,7 +246,7 @@ const T = {
   noGuests:"No guests yet. Import the guest list in Admin.", noProducts:"No products yet. Import inventory in Admin.",
   hi:"Hi", buildLook:"Build your lookbook. Tap any product to add it.",
   all:"All", footwear:"Footwear", tops:"Tops", bottoms:"Bottoms", jackets:"Jackets", hoodies:"Hoodies", accessories:"Accessories",
-  search:"Search", available:"available", soldOut:"Sold out", inLookbook:"In lookbook",
+  search:"Search", allSizes:"All sizes", mySizes:"My sizes", available:"available", soldOut:"Sold out", inLookbook:"In lookbook",
   lookbook:"My Lookbook", lookbookEmpty:"Your lookbook is empty. Tap products to add them.",
   addToLookbook:"Add to lookbook", selectSize:"Select size", yourSize:"Your size", allocFull:"You've reached your {cat} allocation",
   added:"Added to your lookbook", removed:"Removed", sendStylists:"Send to stylists", sent:"Sent to the stylists. They're pulling your pieces.",
@@ -265,7 +272,7 @@ const T = {
   clearAllQ:"Delete ALL products, guests and lookbooks? This cannot be undone.",
   importing:"Importing", imported:"Imported", rowsSkipped:"rows skipped", matched:"matched", unmatched:"not matched",
   enterPin:"Staff PIN", wrongPin:"Wrong PIN", unlock:"Unlock",
-  noDb:"Can't reach the database. Check the Supabase settings in Vercel.", login:"Staff sign in", email:"Email", password:"Password", signIn:"Sign in", signOut:"Sign out", badLogin:"Wrong email or password", fetchNike:"Fetch missing from Nike.com", fetchNikeHelp:"Tries to pull each missing image from Nike by SKU. Anything not found can be dropped or pasted below.", found:"found", notFound:"not found", connecting:"Connecting…", localMode:"Local demo — data is not shared",
+  noDb:"Can't reach the database. Check the Supabase settings in Vercel.", login:"Staff sign in", email:"Email", password:"Password", signIn:"Sign in", signOut:"Sign out", badLogin:"Wrong email or password", fetchNike:"Fetch names & images from Nike.com", fetchNikeHelp:"Fills in missing product names, colorways and images from Nike by SKU. Anything not found can be dropped or pasted below.", namesLbl:"Names filled", found:"found", notFound:"not found", connecting:"Connecting…", localMode:"Local demo — data is not shared",
   readOnly:"You have view-only access, so changes won't save.", noAssets:"Image storage isn't available.",
   sizesStock:"Sizes & stock (e.g. S=2, M=4, L=3)", newProduct:"Product", waiting:"Not started", shopping:"Shopping", submitted:"Submitted", inFitting:"Fitting", done:"Done",
   pickListHelp:"Everything requested, grouped for pulling. Marking a line pulls it for every guest listed.",
@@ -277,7 +284,7 @@ const T = {
   noGuests:"Aún no hay invitados. Importa la lista en Admin.", noProducts:"Aún no hay productos. Importa el inventario en Admin.",
   hi:"Hola", buildLook:"Arma tu lookbook. Toca un producto para agregarlo.",
   all:"Todo", footwear:"Calzado", tops:"Tops", bottoms:"Bottoms", jackets:"Chamarras", hoodies:"Sudaderas", accessories:"Accesorios",
-  search:"Buscar", available:"disponibles", soldOut:"Agotado", inLookbook:"En lookbook",
+  search:"Buscar", allSizes:"Todas las tallas", mySizes:"Mis tallas", available:"disponibles", soldOut:"Agotado", inLookbook:"En lookbook",
   lookbook:"Mi Lookbook", lookbookEmpty:"Tu lookbook está vacío. Toca productos para agregarlos.",
   addToLookbook:"Agregar al lookbook", selectSize:"Elige talla", yourSize:"Tu talla", allocFull:"Llegaste a tu límite de {cat}",
   added:"Agregado a tu lookbook", removed:"Eliminado", sendStylists:"Enviar a stylists", sent:"Enviado. El equipo está preparando tus piezas.",
@@ -303,7 +310,7 @@ const T = {
   clearAllQ:"¿Borrar TODOS los productos, invitados y lookbooks? No se puede deshacer.",
   importing:"Importando", imported:"Importado", rowsSkipped:"filas omitidas", matched:"asignadas", unmatched:"sin coincidencia",
   enterPin:"PIN de staff", wrongPin:"PIN incorrecto", unlock:"Desbloquear",
-  noDb:"No se puede conectar a la base de datos. Revisa la configuración de Supabase en Vercel.", login:"Acceso staff", email:"Email", password:"Contraseña", signIn:"Entrar", signOut:"Cerrar sesión", badLogin:"Email o contraseña incorrectos", fetchNike:"Traer faltantes de Nike.com", fetchNikeHelp:"Intenta traer cada imagen faltante de Nike por SKU. Lo que no encuentre se puede arrastrar o pegar abajo.", found:"encontradas", notFound:"no encontradas", connecting:"Conectando…", localMode:"Demo local — los datos no se comparten",
+  noDb:"No se puede conectar a la base de datos. Revisa la configuración de Supabase en Vercel.", login:"Acceso staff", email:"Email", password:"Contraseña", signIn:"Entrar", signOut:"Cerrar sesión", badLogin:"Email o contraseña incorrectos", fetchNike:"Traer nombres e imágenes de Nike.com", fetchNikeHelp:"Completa nombres, colores e imágenes faltantes desde Nike por SKU. Lo que no encuentre se puede arrastrar o pegar abajo.", namesLbl:"Nombres completados", found:"encontradas", notFound:"no encontradas", connecting:"Conectando…", localMode:"Demo local — los datos no se comparten",
   readOnly:"Tienes acceso de solo lectura; los cambios no se guardarán.", noAssets:"El almacenamiento de imágenes no está disponible.",
   sizesStock:"Tallas y stock (ej. S=2, M=4, L=3)", newProduct:"Producto", waiting:"Sin iniciar", shopping:"Eligiendo", submitted:"Enviado", inFitting:"Probador", done:"Listo",
   pickListHelp:"Todo lo solicitado, agrupado para surtir. Marcar una línea la surte para todos los invitados listados.",
@@ -355,6 +362,11 @@ function sizeForCat(g, cat){
   if(cat==="accessories") return "";
   return g.topSize||"";
 }
+function sizeMatch(guestSize, invSize){
+  const g=norm(guestSize), v=norm(invSize); if(!g||!v) return false; if(g===v) return true;
+  const toks=String(invSize).toUpperCase().split(/[^A-Z0-9.]+/).filter(Boolean);
+  return toks.includes(String(guestSize).toUpperCase().trim());
+}
 function parseSizesText(txt){
   const out={};
   String(txt||"").split(/[,;\n]+/).forEach(part=>{
@@ -392,7 +404,7 @@ const BUCKET="product-images";
 const S = {
   db:null, user:null, assets:null, downloads:null, local:false, connected:false, loadTimedOut:false, readOnly:false,
   products:{}, guests:{}, picks:{}, config:{...DEFAULT_CONFIG},
-  view:"guest", cat:"all", q:"", gq:"", activeGuest:null, lbOpen:false,
+  view:"guest", cat:"all", q:"", sizeF:"mine", gq:"", activeGuest:null, lbOpen:false,
   bohTab:"pull", admQ:"", admMissing:false, unlocked:false,
   modal:null, busy:null,
 };
@@ -520,6 +532,15 @@ function guestHTML(){
   let prods = sortedProducts().filter(p=> alloc[p.category]>0 || S.cat===p.category);
   if(S.cat!=="all") prods = prods.filter(p=>p.category===S.cat);
   if(S.q){ const q=norm(S.q); prods = prods.filter(p=>norm(p.name+" "+p.sku+" "+p.color).includes(q)); }
+  const sizeOpts = [...new Set(prods.flatMap(p=>Object.keys(p.sizes||{})))].sort(sizeSort);
+  const hasMine = !!(g.topSize||g.bottomSize||g.shoeSize);
+  if(S.sizeF==="mine" && hasMine){
+    prods = prods.filter(p=>{ const gs=sizeForCat(g,p.category); if(!gs) return true;
+      return Object.keys(p.sizes||{}).some(sz=>sizeMatch(gs,sz) && availOf(p,sz,res)>0); });
+  } else if(S.sizeF && S.sizeF!=="all" && S.sizeF!=="mine"){
+    prods = prods.filter(p=>Object.keys(p.sizes||{}).some(sz=>sz===S.sizeF && availOf(p,sz,res)>0));
+  }
+  const mySizes = [g.topSize&&(t("top")+" "+g.topSize), g.bottomSize&&(t("bottom")+" "+g.bottomSize), g.shoeSize&&(t("shoe")+" "+g.shoeSize)].filter(Boolean).join(" · ");
   const cats = CATS.filter(c=>alloc[c]>0);
   const first = String(g.name||"").split(" ")[0];
 
@@ -529,13 +550,20 @@ function guestHTML(){
   h += '<div class="alloc">'+cats.map(c=>{ const full=used[c]>=alloc[c]; return '<div class="a '+(full?"full":"")+'"><div class="k">'+esc(t(c))+'</div><div class="v">'+used[c]+' <span style="opacity:.5;font-weight:400">/ '+alloc[c]+'</span></div></div>'; }).join("")+'</div>';
   h += '<div class="filters"><button class="chip '+(S.cat==="all"?"on":"")+'" data-act="cat" data-v="all">'+esc(t("all"))+'</button>'+
        cats.map(c=>'<button class="chip '+(S.cat===c?"on":"")+'" data-act="cat" data-v="'+c+'">'+esc(t(c))+'</button>').join("")+
+       '<select class="input sm sizesel" data-change="sizeF" data-live="1">'+
+         '<option value="all"'+(S.sizeF==="all"||(S.sizeF==="mine"&&!hasMine)?" selected":"")+'>'+esc(t("allSizes"))+'</option>'+
+         (hasMine?'<option value="mine"'+(S.sizeF==="mine"?" selected":"")+'>'+esc(t("mySizes"))+' ('+esc(mySizes)+')</option>':'')+
+         sizeOpts.map(z=>'<option value="'+esc(z)+'"'+(S.sizeF===z?" selected":"")+'>'+esc(t("size"))+' '+esc(z)+'</option>').join("")+
+       '</select>'+
        '<input id="q-guest" data-live="1" class="input sm search" placeholder="'+esc(t("search"))+'" value="'+esc(S.q)+'"></div>';
   if(!prods.length) h += '<div class="empty">'+esc(Object.keys(S.products).length?"—":t("noProducts"))+'</div>';
   h += '<div class="grid">'+prods.map(p=>{
-      const av = totalAvail(p,res); const mine = inLb.has(p.id);
+      const av = totalAvail(p,res); const mine = inLb.has(p.id); const gsz = sizeForCat(g,p.category);
+      const szs = Object.keys(p.sizes||{}).sort(sizeSort);
+      const szHTML = szs.length>1 || (szs[0] && szs[0]!=="OS") ? '<div class="szs">'+szs.slice(0,12).map(z=>{ const a=availOf(p,z,res); return '<span class="'+(a<=0?"out":"")+(gsz&&sizeMatch(gsz,z)?" me":"")+'" title="'+a+' '+esc(t("left"))+'">'+esc(z)+'</span>'; }).join("")+(szs.length>12?'<span>+'+(szs.length-12)+'</span>':'')+'</div>' : '';
       return '<button class="pcard '+(av<=0&&!mine?"out":"")+'" data-act="openProduct" data-id="'+esc(p.id)+'"><div style="position:relative">'+imgHTML(p)+
         (mine?'<span class="badge solid inlb">'+esc(t("inLookbook"))+'</span>':'')+'</div><div class="meta"><div class="nm">'+esc(p.name)+'</div><div class="cl">'+esc(p.color||"")+'</div>'+
-        '<div class="av">'+(av>0? av+' '+esc(t("available")) : esc(t("soldOut")))+'</div></div></button>';
+        szHTML+'<div class="av">'+(av>0? av+' '+esc(t("available")) : esc(t("soldOut")))+'</div></div></button>';
     }).join("")+'</div>';
   h += '</main>';
   h += '<aside class="shop-side '+(S.lbOpen?"open":"")+'">'+lookbookHTML(g, myPicks)+'</aside>';
@@ -596,7 +624,7 @@ function productModalHTML(id){
   let h = '<div class="pd"><div>'+imgHTML(p,true)+'</div><div class="info">';
   h += '<div><div class="eyebrow">'+esc(t(p.category))+'</div><h2 style="margin-top:8px">'+esc(p.name)+'</h2><p class="muted" style="margin-top:6px">'+esc(p.color||"")+'</p><p class="muted small" style="margin-top:2px">'+esc(p.sku)+'</p></div>';
   h += '<div><div class="row" style="margin-bottom:8px"><span class="eyebrow">'+esc(t("selectSize"))+'</span><span class="spacer"></span>'+(rec?'<span class="small muted">'+esc(t("yourSize"))+': <b style="color:#111">'+esc(rec)+'</b></span>':'')+'</div>';
-  h += '<div class="sizes">'+sizes.map(s=>{ const av=availOf(p,s,res); const isRec = rec && norm(rec)===norm(s);
+  h += '<div class="sizes">'+sizes.map(s=>{ const av=availOf(p,s,res); const isRec = rec && sizeMatch(rec,s);
        return '<button class="size '+(sel===s?"on":"")+' '+(isRec?"rec":"")+'" data-act="pickSize" data-v="'+esc(s)+'" '+(av<=0?"disabled":"")+'>'+esc(s)+'<small>'+av+' '+esc(t("left"))+'</small></button>'; }).join("")+'</div></div>';
   h += '<div style="margin-top:auto">';
   if(full) h += '<p class="small" style="margin-bottom:10px">'+esc(t("allocFull",{cat:t(p.category).toLowerCase()}))+'</p>';
@@ -699,7 +727,7 @@ function adminHTML(){
      '</section>';
   // Images
   h += '<section class="sec"><div class="sec-h"><h3>'+esc(t("images"))+'</h3><span class="badge '+(missing?"":"grey")+'">'+missing+' '+esc(t("missingImages"))+'</span></div>'+
-     (S.assets? '<div class="row" style="margin-bottom:14px;flex-wrap:wrap"><button class="btn sm" data-act="fetchNike" '+(S.busy||!missing?"disabled":"")+'>'+esc(t("fetchNike"))+'</button><span class="small muted" style="flex:1;min-width:240px">'+esc(t("fetchNikeHelp"))+'</span></div>'+(S.busy?'<div style="margin:-4px 0 14px"><div class="small" style="margin-bottom:6px">'+esc(S.busy.label)+' — '+S.busy.done+' / '+S.busy.total+'</div><div class="bar"><i style="width:'+(S.busy.total?Math.round(S.busy.done/S.busy.total*100):0)+'%"></i></div></div>':'')+'<p class="small muted" style="margin-bottom:12px">'+esc(t("imagesHelp"))+'</p><div class="drop" id="bulk-drop">'+esc(t("dropHere"))+' <label class="link" style="cursor:pointer">'+esc(t("browse"))+'<input type="file" accept="image/*" multiple class="hidden" data-change="bulkFiles"></label></div>'
+     (S.assets? '<div class="row" style="margin-bottom:14px;flex-wrap:wrap"><button class="btn sm" data-act="fetchNike" '+(S.busy||!(missing||prods.some(needsInfo))?"disabled":"")+'>'+esc(t("fetchNike"))+'</button><span class="small muted" style="flex:1;min-width:240px">'+esc(t("fetchNikeHelp"))+'</span></div>'+(S.busy?'<div style="margin:-4px 0 14px"><div class="small" style="margin-bottom:6px">'+esc(S.busy.label)+' — '+S.busy.done+' / '+S.busy.total+'</div><div class="bar"><i style="width:'+(S.busy.total?Math.round(S.busy.done/S.busy.total*100):0)+'%"></i></div></div>':'')+'<p class="small muted" style="margin-bottom:12px">'+esc(t("imagesHelp"))+'</p><div class="drop" id="bulk-drop">'+esc(t("dropHere"))+' <label class="link" style="cursor:pointer">'+esc(t("browse"))+'<input type="file" accept="image/*" multiple class="hidden" data-change="bulkFiles"></label></div>'
               : '<p class="small muted">'+esc(t("noAssets"))+'</p>')+'</section>';
   // Inventory table
   let fp = prods; if(S.admQ){ const q=norm(S.admQ); fp=fp.filter(p=>norm(p.name+" "+p.sku+" "+p.color).includes(q)); } if(S.admMissing) fp=fp.filter(p=>!p.imageId);
@@ -825,11 +853,11 @@ async function addPick(){
 const handlers = {
   lang: el=>{ LANG=el.dataset.v; try{localStorage.setItem("ss_lang",LANG);}catch(e){} document.documentElement.lang=LANG; render(); },
   cat: el=>{ S.cat=el.dataset.v; render(); },
-  pickGuest: el=>{ S.activeGuest=el.dataset.id; try{localStorage.setItem("ss_active",S.activeGuest);}catch(e){} S.cat="all"; S.q=""; window.scrollTo(0,0); render(); },
+  pickGuest: el=>{ S.activeGuest=el.dataset.id; try{localStorage.setItem("ss_active",S.activeGuest);}catch(e){} S.cat="all"; S.q=""; S.sizeF="mine"; window.scrollTo(0,0); render(); },
   switchGuest: ()=>{ S.activeGuest=null; S.gq=""; S.lbOpen=false; try{localStorage.removeItem("ss_active");}catch(e){} render(); },
   toggleLb: ()=>{ S.lbOpen=!S.lbOpen; render(); },
   openProduct: el=>{ const p=S.products[el.dataset.id]; const g=S.guests[S.activeGuest]; const rec=sizeForCat(g,p.category); const res=reservedMap();
-    let size = Object.keys(p.sizes||{}).find(s=>rec && norm(s)===norm(rec) && availOf(p,s,res)>0) || null;
+    let size = Object.keys(p.sizes||{}).find(s=>rec && sizeMatch(rec,s) && availOf(p,s,res)>0) || null;
     const avs = Object.keys(p.sizes||{}).filter(s=>availOf(p,s,res)>0); if(!size && avs.length===1) size=avs[0];
     openModal({type:"product",id:p.id,size}); },
   pickSize: el=>{ S.modal.size=el.dataset.v; renderModal(); },
@@ -912,6 +940,7 @@ document.addEventListener("change", async ev=>{
   if(k==="gField") await w(()=>gDoc(id).update({[el.dataset.f]:el.value.trim()}),"guest");
   if(k==="gAlloc"){ const v=Math.max(0,parseInt(el.value,10)||0); await w(()=>gDoc(id).update({alloc:{[el.dataset.k]:v}}),"guest"); }
   if(k==="admMissing"){ S.admMissing=el.checked; render(); }
+  if(k==="sizeF"){ S.sizeF=el.value; el.blur(); render(); }
   if(k==="bulkFiles") await bulkImages([...el.files]);
   if(k==="prodFile" && el.files[0]) await setProductImage(id, el.files[0]);
 });
@@ -969,31 +998,55 @@ async function bulkImages(files){
   openModal({type:"result",title:t("images"),text:ok+" "+t("matched")+(miss.length?"\n"+miss.length+" "+t("unmatched")+":\n"+miss.join("\n"):"")});
 }
 
+function catFromText(txt){
+  const x = String(txt||"");
+  if(/(shoe|sneaker|tenis|zapat|boot|slide|sandal|cleat|trainer|running shoe|dunk|air max|air force|jordan \d|pegasus|vomero)/i.test(x) && !/(sock|calcet)/i.test(x)) return "footwear";
+  if(/(hood|sudadera|crew|sweatshirt|pullover)/i.test(x)) return "hoodies";
+  if(/(jacket|chamarra|chaqueta|vest|chaleco|windrunner|parka|coat|anorak|puffer|full-zip|full zip)/i.test(x)) return "jackets";
+  if(/(pant|short|jogger|legging|tight|pantal|skirt|falda|bottom)/i.test(x)) return "bottoms";
+  if(/(cap|hat|gorra|bag|backpack|mochila|sock|calcet|glove|headband|beanie|bottle|ball|balon|belt|visor|sleeve)/i.test(x)) return "accessories";
+  if(/(top|tee|t-shirt|shirt|playera|polo|jersey|tank|bra|long-sleeve|long sleeve|crop)/i.test(x)) return "tops";
+  return "";
+}
+const needsInfo = p => !p.name || norm(p.name)===norm(p.sku);
+// Fills in missing product names (and colorway/category) and missing images from nike.com, 4 products at a time.
 async function fetchNikeImages(only, prefix){
-  if(!S.assets){ toast(t("noAssets")); return; }
-  const list = (only||Object.values(S.products).filter(p=>!p.imageId));
+  const list = (only||Object.values(S.products).filter(p=>!p.imageId || needsInfo(p)));
   if(!list.length) return;
-  let ok=0; const miss=[];
+  let ok=0, named=0; const miss=[];
   S.busy={label:t("fetchNike"),done:0,total:list.length}; render();
   const queue = list.slice();
   async function worker(){
     while(queue.length){
-      const p = queue.shift();
-      try{
-        const r = await fetch("/api/nike-image?sku="+encodeURIComponent(p.sku));
-        if(!r.ok) throw new Error(r.status);
-        const blob = await r.blob();
-        const prepped = await prepImage(blob);
-        const a = await S.assets.upload(prepped);
-        await w(()=>pDoc(p.id).update({imageId:a.id}));
-        ok++;
-      }catch(e){ miss.push(p.sku); }
+      const p0 = queue.shift(); const p = S.products[p0.id] || p0;
+      if(needsInfo(p)){
+        try{
+          const r = await fetch("/api/nike-info?sku="+encodeURIComponent(p.sku));
+          if(r.ok){ const info = await r.json();
+            const name = info.name && info.subtitle && !info.name.toLowerCase().includes(info.subtitle.toLowerCase()) ? info.name+" — "+info.subtitle : info.name;
+            const patch = {name};
+            if(info.color) patch.color = info.color;
+            const c = catFromText(info.name+" "+(info.subtitle||"")); if(c) patch.category = c;
+            await w(()=>pDoc(p.id).update(patch)); named++; }
+        }catch(e){}
+      }
+      if(!p.imageId && S.assets){
+        try{
+          const r = await fetch("/api/nike-image?sku="+encodeURIComponent(p.sku));
+          if(!r.ok) throw new Error(r.status);
+          const blob = await r.blob();
+          const prepped = await prepImage(blob);
+          const a = await S.assets.upload(prepped);
+          await w(()=>pDoc(p.id).update({imageId:a.id}));
+          ok++;
+        }catch(e){ miss.push(p.sku); }
+      }
       S.busy.done++; render();
     }
   }
-  await Promise.all([worker(),worker(),worker(),worker()]); // 4 at a time
+  await Promise.all([worker(),worker(),worker(),worker()]);
   S.busy=null; render();
-  openModal({type:"result",title:prefix?t("imported"):t("fetchNike"),text:(prefix?prefix+"\n\n"+t("images")+": ":"")+ok+" "+t("found")+(miss.length?"\n"+miss.length+" "+t("notFound")+":\n"+miss.join("\n"):"")});
+  openModal({type:"result",title:prefix?t("imported"):t("fetchNike"),text:(prefix?prefix+"\n\n":"")+t("namesLbl")+": "+named+"\n"+t("images")+": "+ok+" "+t("found")+(miss.length?"\n"+miss.length+" "+t("notFound")+":\n"+miss.join("\n"):"")});
 }
 /* ============ Excel import / export ============ */
 const INV_FIELDS = {
@@ -1114,7 +1167,7 @@ async function importInventory(res, mode){
   for(const id of toDelete){ await w(()=>pDoc(id).delete()); S.busy.done++; }
   S.busy=null; render();
   const summary = ids.length+" SKUs · "+Object.values(agg).reduce((a,x)=>a+Object.values(x.sizes).reduce((b,c)=>b+c,0),0)+" units"+(skipped?" · "+skipped+" "+t("rowsSkipped"):"")+(toDelete.length?"\n− "+toDelete.length+" SKUs":"")+"\nColumns used: "+Object.entries(m).map(([k,v])=>k+" ← "+v).join(", ");
-  const newOnes = ids.map(i=>S.products[i]||{id:i,sku:agg[i].sku}).filter(p=>!p.imageId);
+  const newOnes = ids.map(i=>({...(S.products[i]||{}),id:i,sku:agg[i].sku,name:(S.products[i]||{}).name||agg[i].name})).filter(p=>!p.imageId || needsInfo(p));
   if(S.sb && newOnes.length){ await fetchNikeImages(newOnes.map(p=>({...p,id:p.id||docId(p.sku)})), summary); return; }
   openModal({type:"result",title:t("imported"),text:summary});
 }
