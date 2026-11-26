@@ -134,7 +134,7 @@ textarea.input{height:auto;padding:10px 12px;min-height:80px}
 .lb-cat-r{letter-spacing:0;text-transform:none;font-weight:400;color:var(--ink2);font-size:12px}
 .lb-cat.full .lb-cat-r b{background:var(--black);color:#fff;padding:1px 6px;border-radius:3px}
 .filters{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
-.filters .search{width:220px;margin-left:auto}
+.filters .search{width:170px;margin-left:auto}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:22px 14px;align-items:start}
 .fl .input,.fl select,.fl textarea{font-size:15px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:400}
 html,body{overflow-x:hidden}
@@ -149,8 +149,15 @@ html,body{overflow-x:hidden}
 .szs span.out{color:var(--line2);text-decoration:line-through;border-color:var(--line)}
 .szs span.me{border-color:var(--black);background:var(--black);color:#fff}
 .szs span.me.out{background:var(--tile2);color:var(--mute);border-color:var(--tile2)}
-.sizesel{width:auto;max-width:260px;margin-left:auto}
-.filters .sizesel + .search{margin-left:0}
+.filters.f2{margin-top:-8px}
+.seg{display:inline-flex;border:1px solid var(--black);border-radius:999px;overflow:hidden}
+.seg button{height:32px;padding:0 16px;font-size:13px;font-weight:500}
+.seg button.on{background:var(--black);color:#fff}
+.sizerow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex:1;min-width:0;padding:2px 0}
+.sizerow::-webkit-scrollbar{display:none}
+.sizerow .eyebrow{margin-right:4px;flex:none}
+.chip.sm{height:30px;padding:0 11px;font-size:12px;flex:none}
+.chip .op{opacity:.6;font-weight:400}
 .pcard.out{opacity:.4}
 .pcard .inlb{position:absolute;top:8px;right:8px}
 .pcard:hover .ph{background:var(--tile2)}
@@ -275,7 +282,7 @@ const T = {
   noGuests:"No guests yet. Import the guest list in Admin.", noProducts:"No products yet. Import inventory in Admin.",
   hi:"Hi", buildLook:"Build your lookbook. Tap any product to add it.",
   all:"All", footwear:"Footwear", tops:"Tops", bottoms:"Bottoms", jackets:"Jackets", hoodies:"Hoodies", accessories:"Accessories",
-  search:"Search", allSizes:"All sizes", mySizes:"My sizes", available:"available", soldOut:"Sold out", inLookbook:"In lookbook", takeHome:"to take home", leftToTake:"left to pick", allTaken:"all picked", inLookbookLc:"in lookbook", allowHelp:"Add as many pieces as you like to try on. Your allowance is how many you take home.", lbHelp:"Try on as much as you like — then Keep up to your allowance per category.", limitReached:"Limit reached", limitToast:"{cat}: allowance reached. Return one to keep another.",
+  search:"Search", allSizes:"All sizes", mySizes:"My sizes", g_men:"Men", g_women:"Women", g_kids:"Kids", g_unisex:"Unisex", gender:"Gender", available:"available", soldOut:"Sold out", inLookbook:"In lookbook", takeHome:"to take home", leftToTake:"left to pick", allTaken:"all picked", inLookbookLc:"in lookbook", allowHelp:"Add as many pieces as you like to try on. Your allowance is how many you take home.", lbHelp:"Try on as much as you like — then Keep up to your allowance per category.", limitReached:"Limit reached", limitToast:"{cat}: allowance reached. Return one to keep another.",
   lookbook:"My Lookbook", lookbookEmpty:"Your lookbook is empty. Tap products to add them.",
   addToLookbook:"Add to lookbook", selectSize:"Select size", yourSize:"Your size", allocFull:"You've reached your {cat} allocation",
   added:"Added to your lookbook", removed:"Removed", sendStylists:"Send to stylists", sent:"Sent to the stylists. They're pulling your pieces.",
@@ -313,7 +320,7 @@ const T = {
   noGuests:"Aún no hay invitados. Importa la lista en Admin.", noProducts:"Aún no hay productos. Importa el inventario en Admin.",
   hi:"Hola", buildLook:"Arma tu lookbook. Toca un producto para agregarlo.",
   all:"Todo", footwear:"Calzado", tops:"Tops", bottoms:"Bottoms", jackets:"Chamarras", hoodies:"Sudaderas", accessories:"Accesorios",
-  search:"Buscar", allSizes:"Todas las tallas", mySizes:"Mis tallas", available:"disponibles", soldOut:"Agotado", inLookbook:"En lookbook", takeHome:"para llevar", leftToTake:"por elegir", allTaken:"completo", inLookbookLc:"en lookbook", allowHelp:"Agrega todas las piezas que quieras probarte. Tu asignación es lo que te llevas a casa.", lbHelp:"Pruébate todo lo que quieras y luego elige Me lo llevo hasta tu asignación por categoría.", limitReached:"Límite alcanzado", limitToast:"{cat}: asignación completa. Devuelve una para llevarte otra.",
+  search:"Buscar", allSizes:"Todas", mySizes:"Mis tallas", g_men:"Hombre", g_women:"Mujer", g_kids:"Niños", g_unisex:"Unisex", gender:"Género", available:"disponibles", soldOut:"Agotado", inLookbook:"En lookbook", takeHome:"para llevar", leftToTake:"por elegir", allTaken:"completo", inLookbookLc:"en lookbook", allowHelp:"Agrega todas las piezas que quieras probarte. Tu asignación es lo que te llevas a casa.", lbHelp:"Pruébate todo lo que quieras y luego elige Me lo llevo hasta tu asignación por categoría.", limitReached:"Límite alcanzado", limitToast:"{cat}: asignación completa. Devuelve una para llevarte otra.",
   lookbook:"Mi Lookbook", lookbookEmpty:"Tu lookbook está vacío. Toca productos para agregarlos.",
   addToLookbook:"Agregar al lookbook", selectSize:"Elige talla", yourSize:"Tu talla", allocFull:"Llegaste a tu límite de {cat}",
   added:"Agregado a tu lookbook", removed:"Eliminado", sendStylists:"Enviar a stylists", sent:"Enviado. El equipo está preparando tus piezas.",
@@ -391,6 +398,16 @@ function sizeForCat(g, cat){
   if(cat==="accessories") return "";
   return g.topSize||"";
 }
+// men | women | unisex | kids  ("" = unknown). Checks women before men because "women" contains "men".
+function normGender(v){
+  const x=String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  if(!x.trim()) return "";
+  if(/(kid|nin[oa]s?|youth|junior|boys?|girls?|infant|toddler|\b(gs|ps|td|bb)\b|little|big kid)/.test(x)) return "kids";
+  if(/(unisex|\buni\b|all gender)/.test(x)) return "unisex";
+  if(/(women|womens|woman|mujer|dama|female|\bwmns?\b|\bw\b|\bwm\b|femenin)/.test(x)) return "women";
+  if(/(\bmen\b|mens|men's|\bman\b|hombre|caballero|\bmale\b|\bm\b|masculin)/.test(x)) return "men";
+  return "";
+}
 function sizeMatch(guestSize, invSize){
   const g=norm(guestSize), v=norm(invSize); if(!g||!v) return false; if(g===v) return true;
   const toks=String(invSize).toUpperCase().split(/[^A-Z0-9.]+/).filter(Boolean);
@@ -433,7 +450,7 @@ const BUCKET="product-images";
 const S = {
   db:null, user:null, assets:null, downloads:null, local:false, connected:false, loadTimedOut:false, readOnly:false,
   products:{}, guests:{}, picks:{}, config:{...DEFAULT_CONFIG},
-  view:"guest", cat:"all", q:"", sizeF:"mine", gq:"", activeGuest:null, lbOpen:false,
+  view:"guest", cat:"all", q:"", sizeF:"mine", genderF:"all", gq:"", activeGuest:null, lbOpen:false,
   bohTab:"pull", admQ:"", admMissing:false, unlocked:false,
   modal:null, busy:null,
 };
@@ -600,6 +617,8 @@ function guestHTML(){
   let prods = sortedProducts().filter(p=> alloc[p.category]>0 || S.cat===p.category);
   if(S.cat!=="all") prods = prods.filter(p=>p.category===S.cat);
   if(S.q){ const q=norm(S.q); prods = prods.filter(p=>norm(p.name+" "+p.sku+" "+p.color).includes(q)); }
+  const genders = ["men","women","kids"].filter(gd=>Object.values(S.products).some(p=>p.gender===gd));
+  if(S.genderF!=="all") prods = prods.filter(p=>p.gender===S.genderF || p.gender==="unisex" || (!p.gender && p.category==="accessories"));
   const sizeOpts = [...new Set(prods.flatMap(p=>Object.keys(p.sizes||{})))].sort(sizeSort);
   const hasMine = !!(g.topSize||g.bottomSize||g.shoeSize);
   if(S.sizeF==="mine" && hasMine){
@@ -618,12 +637,16 @@ function guestHTML(){
   h += '<p class="small muted" style="margin:-6px 0 10px">'+esc(t("allowHelp"))+'</p>'+allowanceHTML(g);
   h += '<div class="filters"><button class="chip '+(S.cat==="all"?"on":"")+'" data-act="cat" data-v="all">'+esc(t("all"))+'</button>'+
        cats.map(c=>'<button class="chip '+(S.cat===c?"on":"")+'" data-act="cat" data-v="'+c+'">'+esc(t(c))+'</button>').join("")+
-       '<select class="input sm sizesel" data-change="sizeF" data-live="1">'+
-         '<option value="all"'+(S.sizeF==="all"||(S.sizeF==="mine"&&!hasMine)?" selected":"")+'>'+esc(t("allSizes"))+'</option>'+
-         (hasMine?'<option value="mine"'+(S.sizeF==="mine"?" selected":"")+'>'+esc(t("mySizes"))+' ('+esc(mySizes)+')</option>':'')+
-         sizeOpts.map(z=>'<option value="'+esc(z)+'"'+(S.sizeF===z?" selected":"")+'>'+esc(t("size"))+' '+esc(z)+'</option>').join("")+
-       '</select>'+
        '<input id="q-guest" data-live="1" class="input sm search" placeholder="'+esc(t("search"))+'" value="'+esc(S.q)+'"></div>';
+  const sizeChip=(v,label)=>'<button class="chip sm '+(S.sizeF===v||(v==="all"&&S.sizeF==="mine"&&!hasMine)?"on":"")+'" data-act="sizeF" data-v="'+esc(v)+'">'+label+'</button>';
+  h += '<div class="filters f2">'+
+       (genders.length?'<div class="seg">'+[["all",t("all")],...genders.map(gd=>[gd,t("g_"+gd)])].map(([v,l])=>'<button class="'+(S.genderF===v?"on":"")+'" data-act="genderF" data-v="'+v+'">'+esc(l)+'</button>').join("")+'</div>':'')+
+       '<div class="sizerow"><span class="eyebrow">'+esc(t("size"))+'</span>'+
+         (hasMine?sizeChip("mine",esc(t("mySizes"))+' <span class="op">'+esc(mySizes)+'</span>'):'')+
+         sizeChip("all",esc(t("allSizes")))+
+         sizeOpts.map(z=>sizeChip(z,esc(z))).join("")+
+       '</div>'+
+       '</div>';
   if(!prods.length) h += '<div class="empty">'+esc(Object.keys(S.products).length?"—":t("noProducts"))+'</div>';
   h += '<div class="grid">'+prods.map(p=>{
       const av = totalAvail(p,res); const mine = inLb.has(p.id); const gsz = sizeForCat(g,p.category);
@@ -807,7 +830,7 @@ function adminHTML(){
      '</section>';
   // Images
   h += '<section class="sec"><div class="sec-h"><h3>'+esc(t("images"))+'</h3><span class="badge '+(missing?"":"grey")+'">'+missing+' '+esc(t("missingImages"))+'</span></div>'+
-     (S.assets? '<div class="row" style="margin-bottom:14px;flex-wrap:wrap"><button class="btn sm" data-act="fetchNike" '+(S.busy||!(missing||prods.some(needsInfo))?"disabled":"")+'>'+esc(t("fetchNike"))+'</button><span class="small muted" style="flex:1;min-width:240px">'+esc(t("fetchNikeHelp"))+'</span></div>'+(S.busy?'<div style="margin:-4px 0 14px"><div class="small" style="margin-bottom:6px">'+esc(S.busy.label)+' — '+S.busy.done+' / '+S.busy.total+'</div><div class="bar"><i style="width:'+(S.busy.total?Math.round(S.busy.done/S.busy.total*100):0)+'%"></i></div></div>':'')+'<p class="small muted" style="margin-bottom:12px">'+esc(t("imagesHelp"))+'</p><div class="drop" id="bulk-drop">'+esc(t("dropHere"))+' <label class="link" style="cursor:pointer">'+esc(t("browse"))+'<input type="file" accept="image/*" multiple class="hidden" data-change="bulkFiles"></label></div>'
+     (S.assets? '<div class="row" style="margin-bottom:14px;flex-wrap:wrap"><button class="btn sm" data-act="fetchNike" '+(S.busy||!(missing||prods.some(needsLookup))?"disabled":"")+'>'+esc(t("fetchNike"))+'</button><span class="small muted" style="flex:1;min-width:240px">'+esc(t("fetchNikeHelp"))+'</span></div>'+(S.busy?'<div style="margin:-4px 0 14px"><div class="small" style="margin-bottom:6px">'+esc(S.busy.label)+' — '+S.busy.done+' / '+S.busy.total+'</div><div class="bar"><i style="width:'+(S.busy.total?Math.round(S.busy.done/S.busy.total*100):0)+'%"></i></div></div>':'')+'<p class="small muted" style="margin-bottom:12px">'+esc(t("imagesHelp"))+'</p><div class="drop" id="bulk-drop">'+esc(t("dropHere"))+' <label class="link" style="cursor:pointer">'+esc(t("browse"))+'<input type="file" accept="image/*" multiple class="hidden" data-change="bulkFiles"></label></div>'
               : '<p class="small muted">'+esc(t("noAssets"))+'</p>')+'</section>';
   // Inventory table
   let fp = prods; if(S.admQ){ const q=norm(S.admQ); fp=fp.filter(p=>norm(p.name+" "+p.sku+" "+p.color).includes(q)); } if(S.admMissing) fp=fp.filter(p=>!p.imageId);
@@ -815,7 +838,7 @@ function adminHTML(){
      '<label class="row small"><input type="checkbox" data-change="admMissing" '+(S.admMissing?"checked":"")+'> '+esc(t("onlyMissing"))+'</label><input id="q-adm" data-live="1" class="input sm" style="width:200px" placeholder="'+esc(t("search"))+'" value="'+esc(S.admQ)+'"></div>';
   if(!prods.length) h += '<div class="empty small">'+esc(t("noProducts"))+'</div>';
   else h += '<div class="tblwrap" data-scroll="inv"><table class="tbl"><thead><tr><th></th><th>'+t("sku")+'</th><th>'+t("product")+'</th><th>'+t("category")+'</th><th>'+t("sizes")+' ('+t("stock")+' / '+t("reserved")+')</th><th></th></tr></thead><tbody>'+
-     fp.map(p=>'<tr><td style="width:62px"><button data-act="editProduct" data-id="'+esc(p.id)+'" style="display:block;width:48px">'+imgHTML(p)+'</button></td><td style="white-space:nowrap">'+esc(p.sku)+'</td><td><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.color||"")+'</div></td><td>'+esc(t(p.category))+'</td><td class="small">'+
+     fp.map(p=>'<tr><td style="width:62px"><button data-act="editProduct" data-id="'+esc(p.id)+'" style="display:block;width:48px">'+imgHTML(p)+'</button></td><td style="white-space:nowrap">'+esc(p.sku)+'</td><td><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.color||"")+'</div></td><td>'+esc(t(p.category))+(p.gender?'<div class="muted small">'+esc(t("g_"+p.gender))+'</div>':'')+'</td><td class="small">'+
        Object.keys(p.sizes||{}).sort(sizeSort).map(s=>{const r=res[p.id+"|"+s]||0; return '<span style="display:inline-block;margin:0 10px 2px 0;white-space:nowrap"><b>'+esc(s)+'</b> '+(p.sizes[s]||0)+(r?' / <span class="muted">'+r+'</span>':'')+'</span>';}).join("")+
        '</td><td style="white-space:nowrap"><button class="btn ghost xs" data-act="editProduct" data-id="'+esc(p.id)+'">'+esc(t("edit"))+'</button></td></tr>').join("")+'</tbody></table></div>';
   h += '</section>';
@@ -871,6 +894,7 @@ function editProductHTML(id){
     '<label class="fl">'+esc(t("product"))+'<input class="input" id="ep-name" value="'+esc(p.name)+'"></label>'+
     '<label class="fl">'+esc(t("color"))+'<input class="input" id="ep-color" value="'+esc(p.color||"")+'"></label>'+
     '<label class="fl">'+esc(t("category"))+'<select class="input" id="ep-cat">'+CATS.map(c=>'<option value="'+c+'" '+(p.category===c?"selected":"")+'>'+esc(t(c))+'</option>').join("")+'</select></label>'+
+    '<label class="fl">'+esc(t("gender"))+'<select class="input" id="ep-gender">'+[["",""],["men",t("g_men")],["women",t("g_women")],["unisex",t("g_unisex")],["kids",t("g_kids")]].map(([v,l])=>'<option value="'+v+'" '+((p.gender||"")===v?"selected":"")+'>'+esc(l||"—")+'</option>').join("")+'</select></label>'+
     '<label class="fl">'+esc(t("sizesStock"))+'<textarea class="input" id="ep-sizes">'+esc(sizesText(p.sizes))+'</textarea></label>'+
     '<div class="row" style="margin-top:auto"><button class="link" data-act="deleteProduct" data-id="'+esc(p.id)+'">'+esc(t("del"))+'</button><span class="spacer"></span><button class="btn sm" data-act="saveProduct" data-id="'+esc(p.id)+'">'+esc(t("save"))+'</button></div></div></div>';
 }
@@ -935,7 +959,7 @@ async function addPick(){
 const handlers = {
   lang: el=>{ LANG=el.dataset.v; try{localStorage.setItem("ss_lang",LANG);}catch(e){} document.documentElement.lang=LANG; render(); },
   cat: el=>{ S.cat=el.dataset.v; render(); },
-  pickGuest: el=>{ S.activeGuest=el.dataset.id; try{localStorage.setItem("ss_active",S.activeGuest);}catch(e){} S.cat="all"; S.q=""; S.sizeF="mine"; window.scrollTo(0,0); render(); },
+  pickGuest: el=>{ S.activeGuest=el.dataset.id; try{localStorage.setItem("ss_active",S.activeGuest);}catch(e){} S.cat="all"; S.q=""; S.sizeF="mine"; S.genderF=normGender((S.guests[el.dataset.id]||{}).gender)||"all"; if(S.genderF==="unisex") S.genderF="all"; window.scrollTo(0,0); render(); },
   switchGuest: ()=>{ S.logoStart=null; S.activeGuest=null; S.gq=""; S.lbOpen=false; try{localStorage.removeItem("ss_active");}catch(e){} render(); },
   toggleLb: ()=>{ S.lbOpen=!S.lbOpen; render(); },
   openProduct: el=>{ const p=S.products[el.dataset.id]; const g=S.guests[S.activeGuest]; const rec=sizeForCat(g,p.category); const res=reservedMap();
@@ -963,7 +987,7 @@ const handlers = {
   pinOk: ()=>{ const v=$("#pin-in").value; if(v===String(S.config.pin)){ S.unlocked=true; try{sessionStorage.setItem("ss_unlocked","1");}catch(e){} const to=pinPending.to; closeModal(); S.view=to; location.hash = to==="boh"?"back-of-house":to; render(); } else { $("#pin-err").textContent=t("wrongPin"); $("#pin-in").value=""; } },
   pinCancel: ()=>{ closeModal(); history.replaceState(null,"",S.view==="boh"?"#back-of-house":"#"+S.view); render(); },
   editProduct: el=>openModal({type:"editProduct",id:el.dataset.id}),
-  saveProduct: async el=>{ const id=el.dataset.id; const patch={name:$("#ep-name").value.trim(),color:$("#ep-color").value.trim(),category:$("#ep-cat").value,sizes:parseSizesText($("#ep-sizes").value)};
+  saveProduct: async el=>{ const id=el.dataset.id; const patch={name:$("#ep-name").value.trim(),color:$("#ep-color").value.trim(),category:$("#ep-cat").value,gender:$("#ep-gender").value,sizes:parseSizesText($("#ep-sizes").value)};
     document.activeElement && document.activeElement.blur(); closeModal();
     const doc={...S.products[id], ...patch, updatedAt:now()}; delete doc.id; delete doc._localUrl; await w(()=>pDoc(id).set(doc),"product"); toast(t("saved")); },
   deleteProduct: el=>ask(t("deleteQ"), ()=>w(()=>pDoc(el.dataset.id).delete(),"product")),
@@ -984,6 +1008,8 @@ const handlers = {
     S.busy={label:t("clearAll"),done:0,total:all.length}; render(); for(const r of all){ await w(()=>r.delete()); S.busy.done++; render(); } S.busy=null; render(); }),
   import: el=>doImport(el.dataset.v),
   fetchNike: ()=>fetchNikeImages(),
+  sizeF: el=>{ S.sizeF=el.dataset.v; render(); },
+  genderF: el=>{ S.genderF=el.dataset.v; render(); },
   replayLogo: ()=>{ S.logoStart=now(); render(); },
   signOut: async ()=>{ try{ await S.sb.auth.signOut(); }catch(e){} location.reload(); },
   tplInv: ()=>downloadTemplate("inv"),
@@ -1092,9 +1118,10 @@ function catFromText(txt){
   return "";
 }
 const needsInfo = p => !p.name || norm(p.name)===norm(p.sku);
+const needsLookup = p => needsInfo(p) || !p.gender;
 // Fills in missing product names (and colorway/category) and missing images from nike.com, 4 products at a time.
 async function fetchNikeImages(only, prefix){
-  const list = (only||Object.values(S.products).filter(p=>!p.imageId || needsInfo(p)));
+  const list = (only||Object.values(S.products).filter(p=>!p.imageId || needsLookup(p)));
   if(!list.length) return;
   let ok=0, named=0; const miss=[];
   S.busy={label:t("fetchNike"),done:0,total:list.length}; render();
@@ -1102,15 +1129,16 @@ async function fetchNikeImages(only, prefix){
   async function worker(){
     while(queue.length){
       const p0 = queue.shift(); const p = S.products[p0.id] || p0;
-      if(needsInfo(p)){
+      if(needsLookup(p)){ const fullInfo = needsInfo(p);
         try{
           const r = await fetch("/api/nike-info?sku="+encodeURIComponent(p.sku));
           if(r.ok){ const info = await r.json();
             const name = info.name && info.subtitle && !info.name.toLowerCase().includes(info.subtitle.toLowerCase()) ? info.name+" — "+info.subtitle : info.name;
-            const patch = {name};
-            if(info.color) patch.color = info.color;
-            const c = catFromText(info.name+" "+(info.subtitle||"")); if(c) patch.category = c;
-            await w(()=>pDoc(p.id).update(patch)); named++; }
+            const patch = {};
+            const gd = normGender((info.subtitle||"")+" "+info.name); if(gd) patch.gender = gd; else if(!p.gender) patch.gender = "unisex";
+            if(fullInfo){ patch.name=name; if(info.color) patch.color = info.color;
+              const c = catFromText(info.name+" "+(info.subtitle||"")); if(c) patch.category = c; named++; }
+            await w(()=>pDoc(p.id).update(patch)); }
         }catch(e){}
       }
       if(!p.imageId && S.assets){
@@ -1139,6 +1167,7 @@ const INV_FIELDS = {
   color:["color","colorway","colour","colordescription"],
   size:["size","talla","tamano"],
   qty:["qty","quantity","cantidad","units","unidades","stock","inventory","inventario","onhand","pcs","piezas","cant"],
+  gender:["gender","genero","sexo","consumer","consumergroup","gendercode","genderage"],
 };
 const GUEST_FIELDS = {
   name:["name","nombre","guest","guestname","talent","talento","fullname","invitado","nombrecompleto"],
@@ -1147,6 +1176,7 @@ const GUEST_FIELDS = {
   bottomSize:["bottomsize","tallabottom","tallapantalon","tallainferior","pantsize","bottom","tallabottoms"],
   shoeSize:["shoesize","footwearsize","tallacalzado","tallatenis","tallazapato","shoe","calzadotalla","sneakersize"],
   notes:["notes","notas","comments","comentarios","note","nota"],
+  gender:["gender","genero","sexo"],
   footwear:["footwear","calzado","shoes","tenis","footwearallocation","footwearqty"],
   tops:["tops","topsallocation","playeras","topsqty"],
   bottoms:["bottoms","bottomsallocation","pantalones","bottomsqty"],
@@ -1225,6 +1255,7 @@ async function importInventory(res, mode){
     const a = agg[id] || (agg[id]={sku, name:"", color:"", category:"", sizes:{}});
     if(m.name && r[m.name]) a.name = String(r[m.name]).trim();
     if(m.color && r[m.color]) a.color = String(r[m.color]).trim();
+    if(m.gender && r[m.gender]) a.gender = normGender(r[m.gender]);
     if(m.category && r[m.category]){
       const cn = norm(r[m.category]);
       // generic divisions (APP / Apparel / Ropa) → work out tops/bottoms/jackets/hoodies from the product name
@@ -1244,13 +1275,13 @@ async function importInventory(res, mode){
   S.busy={label:t("importing"),done:0,total:ids.length+toDelete.length}; render();
   for(const id of ids){
     const a=agg[id], prev=S.products[id]||{};
-    const doc={sku:a.sku, name:a.name||prev.name||a.sku, color:a.color||prev.color||"", category:a.category||prev.category||normCat(a.name), sizes:a.sizes, imageId:prev.imageId||null, updatedAt:now()};
+    const doc={gender:a.gender||prev.gender||normGender(a.name), sku:a.sku, name:a.name||prev.name||a.sku, color:a.color||prev.color||"", category:a.category||prev.category||normCat(a.name), sizes:a.sizes, imageId:prev.imageId||null, updatedAt:now()};
     await w(()=>pDoc(id).set(doc),"import"); S.busy.done++; if(S.busy.done%5===0) render();
   }
   for(const id of toDelete){ await w(()=>pDoc(id).delete()); S.busy.done++; }
   S.busy=null; render();
   const summary = ids.length+" SKUs · "+Object.values(agg).reduce((a,x)=>a+Object.values(x.sizes).reduce((b,c)=>b+c,0),0)+" units"+(skipped?" · "+skipped+" "+t("rowsSkipped"):"")+(toDelete.length?"\n− "+toDelete.length+" SKUs":"")+"\nColumns used: "+Object.entries(m).map(([k,v])=>k+" ← "+v).join(", ");
-  const newOnes = ids.map(i=>({...(S.products[i]||{}),id:i,sku:agg[i].sku,name:(S.products[i]||{}).name||agg[i].name})).filter(p=>!p.imageId || needsInfo(p));
+  const newOnes = ids.map(i=>({...(S.products[i]||{}),id:i,sku:agg[i].sku,name:(S.products[i]||{}).name||agg[i].name,gender:(S.products[i]||{}).gender||agg[i].gender||normGender(agg[i].name)})).filter(p=>!p.imageId || needsLookup(p));
   if(S.sb && newOnes.length){ await fetchNikeImages(newOnes.map(p=>({...p,id:p.id||docId(p.sku)})), summary); return; }
   openModal({type:"result",title:t("imported"),text:summary});
 }
@@ -1267,6 +1298,7 @@ async function importGuests(rows, headers, mode){
     CATS.forEach(c=>{ if(m[c]!=null && String(r[m[c]]).trim()!==""){ const v=parseInt(r[m[c]],10); if(!isNaN(v)) alloc[c]=Math.max(0,v); } });
     const doc={...prev,name,alloc};
     ["role","topSize","bottomSize","shoeSize","notes"].forEach(f=>{ if(m[f]) doc[f]=String(r[m[f]]||"").trim(); else if(doc[f]==null) doc[f]=""; });
+    if(m.gender) doc.gender = normGender(r[m.gender]);
     work.push([id,doc]);
   });
   const toDelete = mode==="replace" ? Object.keys(S.guests).filter(i=>!seen.has(i)) : [];
@@ -1286,28 +1318,29 @@ async function downloadTemplate(kind){
   const wb = XLSX.utils.book_new();
   if(kind==="inv"){
     XLSX.utils.book_append_sheet(wb, sheet([
-      ["SKU","Product Name","Category","Color","Size","Quantity"],
-      ["DD1391-100","Nike Dunk Low Retro","Footwear","White/Black","9",2],
-      ["DD1391-100","Nike Dunk Low Retro","Footwear","White/Black","10",3],
-      ["FB7880-010","Nike Tech Fleece Hoodie","Hoodies","Black","M",4],
-      ["FB7880-010","Nike Tech Fleece Hoodie","Hoodies","Black","L",4],
-      ["AR5004-010","Nike Sportswear Club Tee","Tops","Black","L",6],
-      ["BV2671-063","Nike Club Fleece Joggers","Bottoms","Grey","M",3],
-      ["DA2400-010","Nike Windrunner Jacket","Jackets","Black","L",2],
-      ["FB5378-010","Nike Club Cap","Accessories","Black","OS",10],
-    ],[16,32,14,18,8,10]),"Inventory");
+      ["SKU","Product Name","Category","Gender","Color","Size","Quantity"],
+      ["DD1391-100","Nike Dunk Low Retro","Footwear","Men","White/Black","9",2],
+      ["DD1391-100","Nike Dunk Low Retro","Footwear","Men","White/Black","10",3],
+      ["FB7880-010","Nike Tech Fleece Hoodie","Hoodies","Unisex","Black","M",4],
+      ["FB7880-010","Nike Tech Fleece Hoodie","Hoodies","Unisex","Black","L",4],
+      ["AR5004-010","Nike Sportswear Club Tee","Tops","Men","Black","L",6],
+      ["BV2671-063","Nike Club Fleece Joggers","Bottoms","Women","Grey","M",3],
+      ["DA2400-010","Nike Windrunner Jacket","Jackets","Women","Black","L",2],
+      ["FB5378-010","Nike Club Cap","Accessories","Unisex","Black","OS",10],
+    ],[16,32,14,10,18,8,10]),"Inventory");
     XLSX.utils.book_append_sheet(wb, sheet([
       ["How to fill this in"],
       ["One row per SKU + size. Repeat the SKU on a new row for each size."],
       ["Category must be one of: Footwear, Tops, Bottoms, Jackets, Hoodies, Accessories (Spanish also works: Calzado, Playeras, Pantalones, Chamarras, Sudaderas, Accesorios)."],
+      ["Gender: Men, Women, Unisex or Kids (Hombre / Mujer also work). Leave blank and the app fills it from Nike."],
       ["Use OS for one-size items. Name images by SKU (e.g. DD1391-100.jpg) and drop them in Admin → Product images."],
     ],[120]),"Instructions");
     await saveWorkbook(wb,"seeding-inventory-template.xlsx");
   } else {
     XLSX.utils.book_append_sheet(wb, sheet([
-      ["Name","Role / Team","Top Size","Bottom Size","Shoe Size","Footwear","Tops","Bottoms","Jackets","Hoodies","Accessories","Notes"],
-      ["Ana López","Athlete","M","M","8",1,2,1,1,1,2,""],
-      ["Carlos Ruiz","Creator","L","L","10",2,2,1,0,1,1,"Prefers neutrals"],
+      ["Name","Role / Team","Gender","Top Size","Bottom Size","Shoe Size","Footwear","Tops","Bottoms","Jackets","Hoodies","Accessories","Notes"],
+      ["Ana López","Athlete","Women","M","M","8",1,2,1,1,1,2,""],
+      ["Carlos Ruiz","Creator","Men","L","L","10",2,2,1,0,1,1,"Prefers neutrals"],
     ],[24,18,10,12,10,10,8,10,10,10,12,30]),"Guests");
     XLSX.utils.book_append_sheet(wb, sheet([
       ["How to fill this in"],
