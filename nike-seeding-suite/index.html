@@ -408,8 +408,15 @@ function normGender(v){
   if(/(\bmen\b|mens|men's|\bman\b|hombre|caballero|\bmale\b|\bm\b|masculin)/.test(x)) return "men";
   return "";
 }
+// "5.5US", "US 5.5", " 5.5 " → "5.5"; "s" → "S"; "o/s", "one size" → "OS"
+function canonSize(z){
+  let x=String(z==null?"":z).toUpperCase().trim().replace(/\s+/g," ");
+  x=x.replace(/^US\s*/,"").replace(/\s*US$/,"").trim();
+  if(/^(O\/S|ONE ?SIZE|ONESIZE|UNICA|TU|MISC|NS)$/.test(x)) x="OS";
+  return x||"OS";
+}
 function sizeMatch(guestSize, invSize){
-  const g=norm(guestSize), v=norm(invSize); if(!g||!v) return false; if(g===v) return true;
+  const g=norm(canonSize(guestSize)), v=norm(canonSize(invSize)); if(!g||!v) return false; if(g===v) return true;
   const toks=String(invSize).toUpperCase().split(/[^A-Z0-9.]+/).filter(Boolean);
   return toks.includes(String(guestSize).toUpperCase().trim());
 }
@@ -450,7 +457,7 @@ const BUCKET="product-images";
 const S = {
   db:null, user:null, assets:null, downloads:null, local:false, connected:false, loadTimedOut:false, readOnly:false,
   products:{}, guests:{}, picks:{}, config:{...DEFAULT_CONFIG},
-  view:"guest", cat:"all", q:"", sizeF:"mine", genderF:"all", gq:"", activeGuest:null, lbOpen:false,
+  view:"guest", cat:"all", q:"", sizeMine:true, sizeSel:[], genderF:"all", gq:"", activeGuest:null, lbOpen:false,
   bohTab:"pull", admQ:"", admMissing:false, unlocked:false,
   modal:null, busy:null,
 };
@@ -619,13 +626,16 @@ function guestHTML(){
   if(S.q){ const q=norm(S.q); prods = prods.filter(p=>norm(p.name+" "+p.sku+" "+p.color).includes(q)); }
   const genders = ["men","women","kids"].filter(gd=>Object.values(S.products).some(p=>p.gender===gd));
   if(S.genderF!=="all") prods = prods.filter(p=>p.gender===S.genderF || p.gender==="unisex" || (!p.gender && p.category==="accessories"));
-  const sizeOpts = [...new Set(prods.flatMap(p=>Object.keys(p.sizes||{})))].sort(sizeSort);
+  const sizeOpts = [...new Set(prods.flatMap(p=>Object.keys(p.sizes||{}).map(canonSize)))].sort(sizeSort);
   const hasMine = !!(g.topSize||g.bottomSize||g.shoeSize);
-  if(S.sizeF==="mine" && hasMine){
-    prods = prods.filter(p=>{ const gs=sizeForCat(g,p.category); if(!gs) return true;
-      return Object.keys(p.sizes||{}).some(sz=>sizeMatch(gs,sz) && availOf(p,sz,res)>0); });
-  } else if(S.sizeF && S.sizeF!=="all" && S.sizeF!=="mine"){
-    prods = prods.filter(p=>Object.keys(p.sizes||{}).some(sz=>sz===S.sizeF && availOf(p,sz,res)>0));
+  const sel = new Set(S.sizeSel||[]); const useMine = S.sizeMine && hasMine;
+  if(useMine || sel.size){
+    prods = prods.filter(p=>{
+      const szs=Object.keys(p.sizes||{}).filter(sz=>availOf(p,sz,res)>0);
+      if(sel.size && szs.some(sz=>sel.has(canonSize(sz)))) return true;
+      if(useMine){ const gs=sizeForCat(g,p.category); if(!gs) return !sel.size; if(szs.some(sz=>sizeMatch(gs,sz))) return true; }
+      return false;
+    });
   }
   const mySizes = [g.topSize&&(t("top")+" "+g.topSize), g.bottomSize&&(t("bottom")+" "+g.bottomSize), g.shoeSize&&(t("shoe")+" "+g.shoeSize)].filter(Boolean).join(" · ");
   const cats = CATS.filter(c=>alloc[c]>0);
@@ -638,7 +648,8 @@ function guestHTML(){
   h += '<div class="filters"><button class="chip '+(S.cat==="all"?"on":"")+'" data-act="cat" data-v="all">'+esc(t("all"))+'</button>'+
        cats.map(c=>'<button class="chip '+(S.cat===c?"on":"")+'" data-act="cat" data-v="'+c+'">'+esc(t(c))+'</button>').join("")+
        '<input id="q-guest" data-live="1" class="input sm search" placeholder="'+esc(t("search"))+'" value="'+esc(S.q)+'"></div>';
-  const sizeChip=(v,label)=>'<button class="chip sm '+(S.sizeF===v||(v==="all"&&S.sizeF==="mine"&&!hasMine)?"on":"")+'" data-act="sizeF" data-v="'+esc(v)+'">'+label+'</button>';
+  const isOn=v=> v==="all" ? !(useMine||sel.size) : v==="mine" ? useMine : sel.has(v);
+  const sizeChip=(v,label)=>'<button class="chip sm '+(isOn(v)?"on":"")+'" data-act="sizeF" data-v="'+esc(v)+'">'+label+'</button>';
   h += '<div class="filters f2">'+
        (genders.length?'<div class="seg">'+[["all",t("all")],...genders.map(gd=>[gd,t("g_"+gd)])].map(([v,l])=>'<button class="'+(S.genderF===v?"on":"")+'" data-act="genderF" data-v="'+v+'">'+esc(l)+'</button>').join("")+'</div>':'')+
        '<div class="sizerow"><span class="eyebrow">'+esc(t("size"))+'</span>'+
@@ -651,7 +662,7 @@ function guestHTML(){
   h += '<div class="grid">'+prods.map(p=>{
       const av = totalAvail(p,res); const mine = inLb.has(p.id); const gsz = sizeForCat(g,p.category);
       const szs = Object.keys(p.sizes||{}).sort(sizeSort);
-      const szHTML = szs.length>1 || (szs[0] && szs[0]!=="OS") ? '<div class="szs">'+szs.slice(0,12).map(z=>{ const a=availOf(p,z,res); return '<span class="'+(a<=0?"out":"")+(gsz&&sizeMatch(gsz,z)?" me":"")+'" title="'+a+' '+esc(t("left"))+'">'+esc(z)+'</span>'; }).join("")+(szs.length>12?'<span>+'+(szs.length-12)+'</span>':'')+'</div>' : '';
+      const szHTML = szs.length>1 || (szs[0] && szs[0]!=="OS") ? '<div class="szs">'+szs.slice(0,12).map(z=>{ const a=availOf(p,z,res); return '<span class="'+(a<=0?"out":"")+(gsz&&sizeMatch(gsz,z)?" me":"")+'" title="'+a+' '+esc(t("left"))+'">'+esc(canonSize(z))+'</span>'; }).join("")+(szs.length>12?'<span>+'+(szs.length-12)+'</span>':'')+'</div>' : '';
       return '<button class="pcard '+(av<=0&&!mine?"out":"")+'" data-act="openProduct" data-id="'+esc(p.id)+'"><div style="position:relative">'+imgHTML(p)+
         (mine?'<span class="badge solid inlb">'+esc(t("inLookbook"))+'</span>':'')+'</div><div class="meta"><div class="nm">'+esc(p.name)+'</div><div class="cl">'+esc(p.color||"")+'</div>'+
         szHTML+'<div class="av">'+(av>0? av+' '+esc(t("available")) : esc(t("soldOut")))+'</div></div></button>';
@@ -729,7 +740,7 @@ function productModalHTML(id){
   h += '<div><div class="eyebrow">'+esc(t(p.category))+'</div><h2 style="margin-top:8px">'+esc(p.name)+'</h2><p class="muted" style="margin-top:6px">'+esc(p.color||"")+'</p><p class="muted small" style="margin-top:2px">'+esc(p.sku)+'</p></div>';
   h += '<div><div class="row" style="margin-bottom:8px"><span class="eyebrow">'+esc(t("selectSize"))+'</span><span class="spacer"></span>'+(rec?'<span class="small muted">'+esc(t("yourSize"))+': <b style="color:#111">'+esc(rec)+'</b></span>':'')+'</div>';
   h += '<div class="sizes">'+sizes.map(s=>{ const av=availOf(p,s,res); const isRec = rec && sizeMatch(rec,s);
-       return '<button class="size '+(sel===s?"on":"")+' '+(isRec?"rec":"")+'" data-act="pickSize" data-v="'+esc(s)+'" '+(av<=0?"disabled":"")+'>'+esc(s)+'<small>'+av+' '+esc(t("left"))+'</small></button>'; }).join("")+'</div></div>';
+       return '<button class="size '+(sel===s?"on":"")+' '+(isRec?"rec":"")+'" data-act="pickSize" data-v="'+esc(s)+'" '+(av<=0?"disabled":"")+'>'+esc(canonSize(s))+'<small>'+av+' '+esc(t("left"))+'</small></button>'; }).join("")+'</div></div>';
   h += '<div style="margin-top:auto">';
   if(full) h += '<p class="small" style="margin-bottom:10px">'+esc(t("allocFull",{cat:t(p.category).toLowerCase()}))+'</p>';
   h += '<button class="btn block" data-act="addPick" '+((sel && !full && availOf(p,sel,res)>0)?"":"disabled")+'>'+esc(t("addToLookbook"))+'</button></div>';
@@ -969,7 +980,7 @@ async function addPick(){
 const handlers = {
   lang: el=>{ LANG=el.dataset.v; try{localStorage.setItem("ss_lang",LANG);}catch(e){} document.documentElement.lang=LANG; render(); },
   cat: el=>{ S.cat=el.dataset.v; render(); },
-  pickGuest: el=>{ S.activeGuest=el.dataset.id; try{localStorage.setItem("ss_active",S.activeGuest);}catch(e){} S.cat="all"; S.q=""; S.sizeF="mine"; S.genderF=normGender((S.guests[el.dataset.id]||{}).gender)||"all"; if(S.genderF==="unisex") S.genderF="all"; window.scrollTo(0,0); render(); },
+  pickGuest: el=>{ S.activeGuest=el.dataset.id; try{localStorage.setItem("ss_active",S.activeGuest);}catch(e){} S.cat="all"; S.q=""; S.sizeMine=true; S.sizeSel=[]; S.genderF=normGender((S.guests[el.dataset.id]||{}).gender)||"all"; if(S.genderF==="unisex") S.genderF="all"; window.scrollTo(0,0); render(); },
   switchGuest: ()=>{ S.logoStart=null; S.activeGuest=null; S.gq=""; S.lbOpen=false; try{localStorage.removeItem("ss_active");}catch(e){} render(); },
   toggleLb: ()=>{ S.lbOpen=!S.lbOpen; render(); },
   openProduct: el=>{ const p=S.products[el.dataset.id]; const g=S.guests[S.activeGuest]; const rec=sizeForCat(g,p.category); const res=reservedMap();
@@ -1018,7 +1029,11 @@ const handlers = {
     S.busy={label:t("clearAll"),done:0,total:all.length}; render(); for(const r of all){ await w(()=>r.delete()); S.busy.done++; render(); } S.busy=null; render(); }),
   import: el=>doImport(el.dataset.v),
   fetchNike: ()=>fetchNikeImages(),
-  sizeF: el=>{ S.sizeF=el.dataset.v; render(); },
+  sizeF: el=>{ const v=el.dataset.v;
+    if(v==="all"){ S.sizeMine=false; S.sizeSel=[]; }
+    else if(v==="mine"){ S.sizeMine=!S.sizeMine; }
+    else { const set=new Set(S.sizeSel||[]); set.has(v)?set.delete(v):set.add(v); S.sizeSel=[...set]; }
+    render(); },
   genderF: el=>{ S.genderF=el.dataset.v; render(); },
   toggleHide: el=>{ const p=S.products[el.dataset.id]; if(p) w(()=>pDoc(p.id).update({hidden:!p.hidden}),"product"); },
   giveProduct: async el=>{
@@ -1069,7 +1084,6 @@ document.addEventListener("change", async ev=>{
   if(k==="gAlloc"){ const v=Math.max(0,parseInt(el.value,10)||0); await w(()=>gDoc(id).update({alloc:{[el.dataset.k]:v}}),"guest"); }
   if(k==="admMissing"){ S.admMissing=el.checked; render(); }
   if(k==="admHidden"){ S.admHidden=el.checked; render(); }
-  if(k==="sizeF"){ S.sizeF=el.value; el.blur(); render(); }
   if(k==="bulkFiles") await bulkImages([...el.files]);
   if(k==="prodFile" && el.files[0]) await setProductImage(id, el.files[0]);
 });
@@ -1282,9 +1296,9 @@ async function importInventory(res, mode){
       a.category = ["app","apparel","ropa","textil","textiles","apparal"].includes(cn) ? (/(hood|sudadera|fleece|crew|sweat)/i.test(a.name)?"hoodies":/(jacket|chamarra|chaqueta|vest|chaleco|windrunner|parka|coat|anorak)/i.test(a.name)?"jackets":/(pant|short|jogger|legging|tight|pantal|skirt|falda)/i.test(a.name)?"bottoms":"tops") : normCat(r[m.category]);
     } else if(!a.category && a.name){ const g=normCat(a.name); if(g!=="accessories") a.category=g; }
     if(wide){
-      sizeCols.forEach(h=>{ const q=parseInt(String(r[h]).replace(/[^0-9-]/g,""),10); if(!isNaN(q) && q>0) a.sizes[h.toUpperCase()]=(a.sizes[h.toUpperCase()]||0)+q; });
+      sizeCols.forEach(h=>{ const q=parseInt(String(r[h]).replace(/[^0-9-]/g,""),10); if(!isNaN(q) && q>0) a.sizes[canonSize(h)]=(a.sizes[canonSize(h)]||0)+q; });
     } else {
-      const size = m.size ? String(r[m.size]||"").trim() : ""; const sz = size || "OS";
+      const sz = canonSize(m.size ? r[m.size] : "");
       const q = m.qty ? parseInt(String(r[m.qty]).replace(/[^0-9-]/g,""),10) : 1;
       a.sizes[sz] = (a.sizes[sz]||0) + (isNaN(q)?0:Math.max(0,q));
     }
